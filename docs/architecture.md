@@ -92,6 +92,11 @@ Each external service has a focused client built on a shared
 reuse, and request timeouts. Authentication is represented by a session cookie,
 matching the contract used by the UI.
 
+The same transport emits structured request and response diagnostics through
+Python logging. Pytest controls whether logs are shown live or only attached to
+failures. Sensitive headers, passwords, tokens, and cookie values are redacted
+before formatting, so debug output can be retained in CI artifacts safely.
+
 ### JSON Schemas
 
 Draft 2020-12 schemas describe the six external service responses. Schemas

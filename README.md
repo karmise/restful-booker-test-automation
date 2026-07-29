@@ -87,6 +87,33 @@ poetry run pytest tests/ui/test_home_page.py
 poetry run pytest tests/api/test_booking_api.py
 ```
 
+## API request logging
+
+The shared API transport logs the request method, URL, query parameters,
+headers, cookie names, request body, response status, elapsed time, response
+headers, and response body. Passwords, tokens, authorization headers, and cookie
+values are replaced with `<redacted>`. Bodies longer than 4,000 characters are
+truncated.
+
+By default, pytest captures `INFO` logs and prints them when a test fails. To
+stream every request and response during a local run:
+
+```bash
+poetry run pytest tests/api --log-cli-level=INFO
+```
+
+To keep live logging enabled for every run, change this option in
+`pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+log_cli = true
+```
+
+Set it back to `false` to return to failure-only output. The same options could
+live in `pytest.ini`; this project keeps all Python tool configuration in one
+`pyproject.toml`.
+
 The pytest configuration retains a Playwright trace and screenshot for failed
 tests under `artifacts/`.
 

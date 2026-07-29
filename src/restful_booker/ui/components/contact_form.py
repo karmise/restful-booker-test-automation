@@ -9,25 +9,35 @@ class ContactForm:
     """Contact form behavior owned by the home page."""
 
     def __init__(self, page: Page) -> None:
-        self._page = page
-        self._root = page.locator("#contact")
-        self._name = self._root.get_by_test_id("ContactName")
-        self._email = self._root.get_by_test_id("ContactEmail")
-        self._phone = self._root.get_by_test_id("ContactPhone")
-        self._subject = self._root.get_by_test_id("ContactSubject")
-        self._message = self._root.get_by_test_id("ContactDescription")
-        self._submit_button = self._root.get_by_role("button", name="Submit", exact=True)
+        self._root = page.locator("#contact").describe("Public contact section")
+        self._name = self._root.get_by_test_id("ContactName").describe("Contact name input")
+        self._email = self._root.get_by_test_id("ContactEmail").describe("Contact email input")
+        self._phone = self._root.get_by_test_id("ContactPhone").describe("Contact phone input")
+        self._subject = self._root.get_by_test_id("ContactSubject").describe(
+            "Contact subject input"
+        )
+        self._message = self._root.get_by_test_id("ContactDescription").describe(
+            "Contact message input"
+        )
+        self._submit_button = self._root.get_by_role(
+            "button",
+            name="Submit",
+            exact=True,
+        ).describe("Contact form submit button")
 
     @property
     def validation_feedback(self) -> Locator:
         """Validation summary displayed after an invalid submission."""
 
-        return self._root.locator(".alert")
+        return self._root.locator(".alert").describe("Contact form validation feedback")
 
     def confirmation(self, text: str) -> Locator:
         """Locate a piece of text in the successful submission confirmation."""
 
-        return self._root.get_by_text(text, exact=False)
+        return self._root.get_by_text(
+            text,
+            exact=False,
+        ).describe(f"Contact confirmation containing '{text}'")
 
     def submit_empty(self) -> None:
         """Submit the untouched form to trigger required-field validation."""

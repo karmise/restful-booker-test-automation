@@ -12,11 +12,13 @@ tests/ui
         |
         +-- restful_booker.testdata
         +-- restful_booker.models
-        +-- restful_booker.ui.pages
+        +-- restful_booker.ui.assertions
               |
-              +-- restful_booker.ui.components
+              +-- restful_booker.ui.pages
                     |
-                    +-- Playwright
+                    +-- restful_booker.ui.components
+                          |
+                          +-- Playwright
 ```
 
 Lower layers never import tests or fixtures.
@@ -48,7 +50,16 @@ interactions.
 ### Page objects
 
 Represents complete application pages and coordinates components. Page objects
-expose user-oriented actions; they do not contain test cases.
+expose user-oriented actions and observable elements. They do not contain test
+cases or assertions.
+
+### Assertion objects
+
+Group observable outcomes by business area. They are the only UI framework
+modules that import Playwright `expect`. Each expectation keeps Playwright's
+native diagnostics and adds a user-facing message describing the failed
+business condition. Generic wrappers such as `assert_visible(locator)` are
+deliberately avoided.
 
 ### Fixtures
 
@@ -59,8 +70,9 @@ loading Playwright-specific fixtures.
 
 ### Tests
 
-Describe scenarios and observable outcomes. Tests should not contain raw CSS or
-XPath selectors and should not instantiate page objects directly.
+Describe scenarios through actions and domain assertions. Tests do not import
+Playwright `expect`, contain raw CSS or XPath selectors, or instantiate page
+objects and assertion objects directly.
 
 ## Deferred layers
 

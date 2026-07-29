@@ -14,15 +14,17 @@ The framework separates test intent from browser mechanics:
 ```text
 tests/ui
   -> UI fixtures
-    -> test-data factories and UI models
+    -> assertion objects
       -> page objects
         -> reusable UI components
-          -> Playwright
+    -> test-data factories and UI models
+      -> Playwright
 ```
 
 - `core` owns environment configuration.
 - `models` contains immutable data passed between test layers.
 - `testdata` creates valid and unique test inputs.
+- `ui/assertions` contains domain checks and readable failure messages.
 - `ui/components` represents reusable or behavior-rich page elements.
 - `ui/pages` exposes business-oriented page actions.
 - `tests/ui/fixtures` composes UI objects and controls their lifecycle.
@@ -35,6 +37,9 @@ fixtures or depend on browser setup.
 The project deliberately has no generic `helpers` module or inheritance-heavy
 base page. Shared abstractions will be introduced only when real duplication
 demonstrates a stable responsibility.
+
+Tests do not import Playwright `expect`. Assertion objects retain Playwright's
+native expected/actual values and call logs while adding business context.
 
 See [Architecture](docs/architecture.md) and
 [UI test plan](docs/ui-test-plan.md) for the current design. Locator decisions

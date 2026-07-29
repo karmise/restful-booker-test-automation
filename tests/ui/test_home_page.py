@@ -1,51 +1,50 @@
 """Home page UI scenarios."""
 
 import pytest
-from playwright.sync_api import expect
 
-from restful_booker.models import ContactMessage
-from restful_booker.ui.pages import HomePage, ReservationPage
+from restful_booker.models import ContactMessage, Room
+from restful_booker.ui.assertions import HomeAssertions, ReservationAssertions
+from restful_booker.ui.pages import HomePage
 
 
 @pytest.mark.ui
 @pytest.mark.smoke
 def test_user_opens_a_seeded_room(
     home_page: HomePage,
-    reservation_page: ReservationPage,
+    home_assertions: HomeAssertions,
+    reservation_assertions: ReservationAssertions,
+    double_room: Room,
 ) -> None:
     home_page.open()
 
-    expect(home_page.room_card("Double")).to_be_visible()
-    home_page.open_room("Double")
+    home_assertions.room_is_available(double_room)
+    home_page.open_room(double_room.name)
 
-    reservation_page.expect_open_for(room_id=2, room_name="Double")
+    reservation_assertions.selected_room_is_open(double_room)
 
 
 @pytest.mark.ui
 @pytest.mark.regression
-def test_contact_form_reports_required_fields(home_page: HomePage) -> None:
+def test_contact_form_reports_required_fields(
+    home_page: HomePage,
+    home_assertions: HomeAssertions,
+) -> None:
     home_page.open()
 
     home_page.contact_form.submit_empty()
 
-    expect(home_page.contact_form.validation_feedback).to_contain_text("Name may not be blank")
-    expect(home_page.contact_form.validation_feedback).to_contain_text("Email may not be blank")
-    expect(home_page.contact_form.validation_feedback).to_contain_text("Phone may not be blank")
-    expect(home_page.contact_form.validation_feedback).to_contain_text("Subject may not be blank")
-    expect(home_page.contact_form.validation_feedback).to_contain_text("Message may not be blank")
+    home_assertions.required_contact_errors_are_displayed()
 
 
 @pytest.mark.ui
 @pytest.mark.smoke
 def test_user_submits_a_valid_contact_message(
     home_page: HomePage,
+    home_assertions: HomeAssertions,
     contact_message: ContactMessage,
 ) -> None:
     home_page.open()
 
     home_page.contact_form.submit(contact_message)
 
-    expect(
-        home_page.contact_form.confirmation(f"Thanks for getting in touch {contact_message.name}!")
-    ).to_be_visible()
-    expect(home_page.contact_form.confirmation(contact_message.subject)).to_be_visible()
+    home_assertions.contact_submission_is_confirmed(contact_message)

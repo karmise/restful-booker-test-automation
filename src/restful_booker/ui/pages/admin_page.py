@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import re
-
-from playwright.sync_api import Locator, Page, expect
+from playwright.sync_api import Locator, Page
 
 from restful_booker.core import Settings
 from restful_booker.models import Credentials
@@ -23,21 +21,37 @@ class AdminPage:
             "heading",
             name="Login",
             exact=True,
-        )
-        self._username = page.get_by_label("Username", exact=True)
-        self._password = page.get_by_label("Password", exact=True)
+        ).describe("Administrator login heading")
+        self._username = page.get_by_label(
+            "Username",
+            exact=True,
+        ).describe("Administrator username input")
+        self._password = page.get_by_label(
+            "Password",
+            exact=True,
+        ).describe("Administrator password input")
         self._login_button = page.get_by_role(
             "button",
             name="Login",
             exact=True,
-        )
+        ).describe("Administrator login submit button")
         self.navigation = AdminNavigation(page)
+
+    @property
+    def login_heading(self) -> Locator:
+        """Administrator login form heading."""
+
+        return self._login_heading
 
     @property
     def invalid_credentials_feedback(self) -> Locator:
         """Authentication error displayed by the login form."""
 
-        return self._page.get_by_role("alert").filter(has_text="Invalid credentials")
+        return (
+            self._page.get_by_role("alert")
+            .filter(has_text="Invalid credentials")
+            .describe("Invalid administrator credentials feedback")
+        )
 
     def open(self) -> AdminPage:
         """Navigate to the administration area."""
@@ -47,7 +61,6 @@ class AdminPage:
             wait_until="domcontentloaded",
             timeout=self._settings.navigation_timeout_ms,
         )
-        expect(self._login_heading).to_be_visible()
         return self
 
     def open_rooms(self) -> None:
@@ -65,25 +78,3 @@ class AdminPage:
         self._username.fill(credentials.username)
         self._password.fill(credentials.password)
         self._login_button.click()
-
-    def expect_authenticated(self) -> None:
-        """Verify the authenticated administration shell."""
-
-        expect(self._page).to_have_url(
-            re.compile(rf"^{re.escape(self._settings.base_url)}/admin/rooms/?$")
-        )
-        expect(self.navigation.link("Rooms")).to_be_visible()
-        expect(self.navigation.link("Report")).to_be_visible()
-
-    def expect_login_required(self) -> None:
-        """Verify that the browser is on the administrator login page."""
-
-        expect(self._page).to_have_url(
-            re.compile(rf"^{re.escape(self._settings.base_url)}/admin/?$")
-        )
-        expect(self._login_heading).to_be_visible()
-
-    def expect_logged_out(self) -> None:
-        """Verify the public page reached after logout."""
-
-        expect(self._page).to_have_url(re.compile(rf"^{re.escape(self._settings.base_url)}/?$"))

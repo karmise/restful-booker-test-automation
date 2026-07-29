@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from playwright.sync_api import Locator, Page, expect
+from playwright.sync_api import Locator, Page
 
 from restful_booker.core import Settings
 from restful_booker.ui.components import ContactForm, Header
@@ -20,8 +20,8 @@ class HomePage:
             "heading",
             name="Welcome to Shady Meadows B&B",
             exact=True,
-        )
-        self._rooms = page.locator("#rooms")
+        ).describe("Home page welcome heading")
+        self._rooms = page.locator("#rooms").describe("Home page rooms section")
         self.header = Header(page)
         self.contact_form = ContactForm(page)
 
@@ -33,13 +33,16 @@ class HomePage:
             wait_until="domcontentloaded",
             timeout=self._settings.navigation_timeout_ms,
         )
-        expect(self._heading).to_be_visible()
         return self
 
     def room_card(self, room_name: str) -> Locator:
         """Locate a seeded room card by its user-visible name."""
 
-        return self._rooms.locator(".room-card").filter(has_text=room_name)
+        return (
+            self._rooms.locator(".room-card")
+            .filter(has_text=room_name)
+            .describe(f"Room card for '{room_name}'")
+        )
 
     def open_room(self, room_name: str) -> None:
         """Open the reservation page from a named room card."""
@@ -48,4 +51,4 @@ class HomePage:
             "link",
             name="Book now",
             exact=True,
-        ).click()
+        ).describe(f"Book now link for '{room_name}'").click()

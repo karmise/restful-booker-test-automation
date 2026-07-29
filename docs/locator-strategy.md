@@ -13,12 +13,21 @@ uses the following order of preference:
 ## Rules
 
 - Raw selectors stay inside page objects and components.
+- Important action locators use `locator.describe()` so call logs and traces
+  identify their business purpose.
 - Every action locator must resolve to one intended element.
 - Repeated content is scoped to a business container before its child is found.
 - Positional selectors such as `nth()` are avoided unless order is the behavior
   under test.
 - Generated class names, deep CSS chains, and DOM ancestry XPath are prohibited.
 - Playwright web-first assertions replace fixed sleeps.
+
+## Failure diagnostics
+
+Playwright exceptions are not caught or replaced. Action failures therefore
+retain the original locator, timeout, call log, and trace. Domain assertion
+objects pass a custom message to `expect`, adding business context without
+discarding the native expected and actual values.
 
 ## Current application contracts
 
@@ -32,4 +41,3 @@ The contact form's Message label currently points to `message`, while the
 textarea ID is `description`. The component therefore uses
 `data-testid="ContactDescription"` instead of relying on the broken label
 association.
-

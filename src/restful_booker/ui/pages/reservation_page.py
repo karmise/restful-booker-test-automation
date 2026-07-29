@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import re
 from urllib.parse import urlencode
 
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
 
 from restful_booker.core import Settings
 from restful_booker.models import StayPeriod
@@ -45,11 +44,3 @@ class ReservationPage:
             wait_until="domcontentloaded",
             timeout=self._settings.navigation_timeout_ms,
         )
-
-    def expect_open_for(self, *, room_id: int, room_name: str) -> None:
-        """Verify that the selected room reservation page is open."""
-
-        expect(self._page).to_have_url(
-            re.compile(rf"^{re.escape(self._settings.base_url)}/reservation/{room_id}\?.+$"),
-        )
-        expect(self.room_overview.heading(room_name)).to_be_visible()

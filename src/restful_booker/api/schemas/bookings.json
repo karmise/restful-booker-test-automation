@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Booking collection response",
+  "type": "object",
+  "required": ["bookings"],
+  "properties": {
+    "bookings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "bookingid",
+          "roomid",
+          "firstname",
+          "lastname",
+          "depositpaid",
+          "bookingdates"
+        ],
+        "properties": {
+          "bookingid": {"type": "integer", "minimum": 1},
+          "roomid": {"type": "integer", "minimum": 1},
+          "firstname": {"type": "string"},
+          "lastname": {"type": "string"},
+          "depositpaid": {"type": "boolean"},
+          "bookingdates": {
+            "type": "object",
+            "required": ["checkin", "checkout"],
+            "properties": {
+              "checkin": {"type": "string", "format": "date"},
+              "checkout": {"type": "string", "format": "date"}
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

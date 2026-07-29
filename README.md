@@ -1,15 +1,14 @@
-# Restful Booker UI Test Framework
+# Restful Booker Test Automation Framework
 
 A layered Python test automation framework for the
 [Restful Booker Platform](https://automationintesting.online).
 
-The UI milestone contains 15 tests: five scenarios for each of the home,
-reservation, and administration areas. API automation is intentionally outside
-the current milestone.
+The project contains 30 automated tests: 15 browser scenarios and 15 API
+scenarios covering six external service contracts.
 
 ## Architecture
 
-The framework separates test intent from browser mechanics:
+The framework separates test intent from transport mechanics:
 
 ```text
 tests/ui
@@ -19,20 +18,30 @@ tests/ui
         -> reusable UI components
     -> test-data factories and UI models
       -> Playwright
+
+tests/api
+  -> API fixtures and resource lifecycles
+    -> assertion objects and JSON Schemas
+      -> service clients
+        -> request and response DTOs
+          -> requests.Session
 ```
 
 - `core` owns environment configuration.
-- `models` contains immutable data passed between test layers.
-- `testdata` creates valid and unique test inputs.
+- `models` and `testdata` contain typed UI data.
 - `ui/assertions` contains domain checks and readable failure messages.
 - `ui/components` represents reusable or behavior-rich page elements.
 - `ui/pages` exposes business-oriented page actions.
+- `api/dto` contains immutable external API contracts.
+- `api/clients` contains one HTTP client per service.
+- `api/schemas` contains Draft 2020-12 JSON Schemas.
+- `api/assertions` separates protocol, contract, and business checks.
+- `api/testdata` creates unique API-owned resources.
 - `tests/ui/fixtures` composes UI objects and controls their lifecycle.
-- `tests/ui` contains browser scenarios and assertions.
+- `tests/api/fixtures` authenticates and guarantees reverse-order cleanup.
 
-Fixture registration is scoped by test type. UI fixtures are registered in
-`tests/ui/conftest.py`, so a future `tests/api` suite will not load Playwright
-fixtures or depend on browser setup.
+Fixture registration is scoped by test type. API tests never load Playwright
+fixtures, and UI tests do not create HTTP clients.
 
 The project deliberately has no generic `helpers` module or inheritance-heavy
 base page. Shared abstractions will be introduced only when real duplication
@@ -41,10 +50,9 @@ demonstrates a stable responsibility.
 Tests do not import Playwright `expect`. Assertion objects retain Playwright's
 native expected/actual values and call logs while adding business context.
 
-See [Architecture](docs/architecture.md) and
-[UI test plan](docs/ui-test-plan.md) for the current design. Locator decisions
-are documented separately in the
-[locator strategy](docs/locator-strategy.md).
+See [Architecture](docs/architecture.md), [UI test plan](docs/ui-test-plan.md),
+and [API test plan](docs/api-test-plan.md). Locator decisions are documented in
+the [locator strategy](docs/locator-strategy.md).
 
 ## Prerequisites
 
@@ -68,6 +76,7 @@ overridden. The public sandbox credentials are intentionally non-secret.
 poetry run ruff format --check .
 poetry run ruff check .
 poetry run mypy src tests
+poetry run pytest tests/api
 poetry run pytest tests/ui
 ```
 
@@ -75,6 +84,7 @@ Run an individual area:
 
 ```bash
 poetry run pytest tests/ui/test_home_page.py
+poetry run pytest tests/api/test_booking_api.py
 ```
 
 The pytest configuration retains a Playwright trace and screenshot for failed
@@ -88,8 +98,24 @@ tests under `artifacts/`.
 | Reservation | Room details, pricing, required and format validation, cancel guest entry |
 | Administration | Invalid and valid login, route protection, Report navigation, logout |
 
-The GitHub Actions workflow runs formatting, linting, type checking, and all 15
-tests in Chromium on Python 3.12. Failure artifacts are retained for seven days.
+## Implemented API coverage
+
+| Service | Scenarios |
+| --- | --- |
+| Auth | Token contract, invalid credentials, token validation |
+| Room | Collection contract, isolated creation, authorization |
+| Booking | Isolated creation, field and date validation, authorization |
+| Message | Isolated creation, email validation, authorization |
+| Branding | Public branding contract and business identity |
+| Report | Empty availability report for a newly created room |
+
+Six Draft 2020-12 schemas validate the external contracts consumed by the UI.
+Lifecycle fixtures create unique rooms, bookings, and messages, then remove
+them in reverse dependency order even after a failed assertion.
+
+GitHub Actions runs quality checks, the API suite, and the Chromium UI suite as
+separate jobs on Python 3.12. Browser failure artifacts are retained for seven
+days.
 
 ## Environment variables
 
@@ -100,7 +126,8 @@ tests in Chromium on Python 3.12. Failure artifacts are retained for seven days.
 | `RBP_ADMIN_PASSWORD` | `password` |
 | `RBP_ACTION_TIMEOUT_MS` | `10000` |
 | `RBP_NAVIGATION_TIMEOUT_MS` | `30000` |
+| `RBP_API_TIMEOUT_S` | `15` |
 
 The public environment is shared and periodically reset. Tests therefore use
-isolated browser contexts, unique generated form data, and avoid destructive
-administration scenarios.
+isolated browser contexts and unique generated data. API cleanup deletes only
+resources created by the current test.

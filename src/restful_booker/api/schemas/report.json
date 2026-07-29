@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Room report response",
+  "type": "object",
+  "required": ["report"],
+  "properties": {
+    "report": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["start", "end", "title"],
+        "properties": {
+          "start": {"type": "string", "format": "date"},
+          "end": {"type": "string", "format": "date"},
+          "title": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

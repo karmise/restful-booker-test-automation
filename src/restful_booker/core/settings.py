@@ -15,6 +15,7 @@ class Settings:
     admin_password: str
     action_timeout_ms: int
     navigation_timeout_ms: int
+    api_timeout_s: int
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -32,6 +33,7 @@ class Settings:
                 "RBP_NAVIGATION_TIMEOUT_MS",
                 default=30_000,
             ),
+            api_timeout_s=_positive_int("RBP_API_TIMEOUT_S", default=15),
         )
 
 

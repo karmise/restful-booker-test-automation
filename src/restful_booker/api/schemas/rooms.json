@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Room collection response",
+  "type": "object",
+  "required": ["rooms"],
+  "properties": {
+    "rooms": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/room"
+      }
+    }
+  },
+  "$defs": {
+    "room": {
+      "type": "object",
+      "required": [
+        "roomid",
+        "roomName",
+        "type",
+        "accessible",
+        "image",
+        "description",
+        "features",
+        "roomPrice"
+      ],
+      "properties": {
+        "roomid": {"type": "integer", "minimum": 1},
+        "roomName": {"type": "string", "minLength": 1},
+        "type": {
+          "type": "string",
+          "enum": ["Single", "Double", "Twin", "Family", "Suite"]
+        },
+        "accessible": {"type": "boolean"},
+        "image": {"type": "string"},
+        "description": {"type": "string"},
+        "features": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "roomPrice": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

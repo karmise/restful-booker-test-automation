@@ -11,13 +11,16 @@ dependencies = []
 package-mode = false
 
 [tool.poetry.group.test.dependencies]
+jsonschema = ">=4.23,<5.0"
 playwright = ">=1.50,<2.0"
 pytest = ">=8.3,<9.0"
 pytest-playwright = ">=0.6,<1.0"
+requests = ">=2.32,<3.0"
 
 [tool.poetry.group.quality.dependencies]
 mypy = ">=1.14,<2.0"
 ruff = ">=0.9,<1.0"
+types-jsonschema = ">=4.23,<5.0"
 
 [build-system]
 requires = ["poetry-core>=2.0,<3.0"]
@@ -35,6 +38,7 @@ addopts = [
 testpaths = ["tests"]
 pythonpath = ["src"]
 markers = [
+    "api: HTTP API tests",
     "ui: browser-based user interface tests",
     "smoke: critical happy-path checks",
     "regression: broader functional coverage",

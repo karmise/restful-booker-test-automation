@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local configuration
+.env
+
+# Test artifacts
+allure-results/
+allure-report/
+artifacts/
+playwright-report/
+test-results/
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+
+# Codex working directories
+outputs/
+work/
+

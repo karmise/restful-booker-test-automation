@@ -3,9 +3,9 @@
 A layered Python test automation framework for the
 [Restful Booker Platform](https://automationintesting.online).
 
-The first milestone contains nine UI tests: three scenarios for each of the
-home, reservation, and administration areas. API automation is intentionally
-outside the first milestone.
+The UI milestone contains 15 tests: five scenarios for each of the home,
+reservation, and administration areas. API automation is intentionally outside
+the current milestone.
 
 ## Architecture
 
@@ -84,13 +84,12 @@ tests under `artifacts/`.
 
 | Area | Scenarios |
 | --- | --- |
-| Home | Open a seeded room, required contact validation, valid contact submission |
-| Reservation | Room details, selected-stay pricing, required guest validation |
-| Administration | Invalid login, valid login, logout and access revocation |
+| Home | Open a room, Contact navigation, required and format validation, valid message |
+| Reservation | Room details, pricing, required and format validation, cancel guest entry |
+| Administration | Invalid and valid login, route protection, Report navigation, logout |
 
-The GitHub Actions workflow runs formatting, linting, type checking, and all
-nine tests in Chromium on Python 3.12. Failure artifacts are retained for seven
-days.
+The GitHub Actions workflow runs formatting, linting, type checking, and all 15
+tests in Chromium on Python 3.12. Failure artifacts are retained for seven days.
 
 ## Environment variables
 

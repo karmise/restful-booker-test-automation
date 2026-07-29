@@ -3,7 +3,13 @@
 import pytest
 
 from restful_booker.core import Settings
-from restful_booker.models import BookingRequest, ContactMessage, Credentials, Room
+from restful_booker.models import (
+    BookingRequest,
+    ContactMessage,
+    Credentials,
+    GuestDetails,
+    Room,
+)
 from restful_booker.testdata import TestDataFactory
 
 
@@ -22,10 +28,24 @@ def contact_message(test_data_factory: TestDataFactory) -> ContactMessage:
 
 
 @pytest.fixture
+def invalid_contact_message(test_data_factory: TestDataFactory) -> ContactMessage:
+    """Create a complete message that isolates contact-detail validation."""
+
+    return test_data_factory.invalid_contact_message()
+
+
+@pytest.fixture
 def booking_request(test_data_factory: TestDataFactory) -> BookingRequest:
     """Create a valid future reservation request."""
 
     return test_data_factory.booking_request()
+
+
+@pytest.fixture
+def invalid_guest_details(test_data_factory: TestDataFactory) -> GuestDetails:
+    """Create complete guest details with invalid email and phone values."""
+
+    return test_data_factory.invalid_guest_details()
 
 
 @pytest.fixture(scope="session")

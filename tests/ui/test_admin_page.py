@@ -36,6 +36,33 @@ def test_administrator_can_sign_in(
 
 
 @pytest.mark.ui
+@pytest.mark.regression
+def test_protected_rooms_redirect_anonymous_user_to_login(
+    admin_page: AdminPage,
+    admin_assertions: AdminAssertions,
+) -> None:
+    admin_page.open_rooms()
+
+    admin_assertions.protected_rooms_require_login()
+
+
+@pytest.mark.ui
+@pytest.mark.regression
+def test_administrator_can_open_booking_report(
+    admin_page: AdminPage,
+    admin_assertions: AdminAssertions,
+    admin_credentials: Credentials,
+) -> None:
+    admin_page.open()
+    admin_page.login(admin_credentials)
+    admin_assertions.administrator_is_authenticated()
+
+    admin_page.navigation.open_section("Report")
+
+    admin_assertions.booking_report_is_open()
+
+
+@pytest.mark.ui
 @pytest.mark.smoke
 def test_logout_removes_access_to_administration(
     admin_page: AdminPage,

@@ -10,6 +10,11 @@ class ContactForm:
 
     def __init__(self, page: Page) -> None:
         self._root = page.locator("#contact").describe("Public contact section")
+        self._heading = self._root.get_by_role(
+            "heading",
+            name="Send Us a Message",
+            exact=True,
+        ).describe("Contact form section heading")
         self._name = self._root.get_by_test_id("ContactName").describe("Contact name input")
         self._email = self._root.get_by_test_id("ContactEmail").describe("Contact email input")
         self._phone = self._root.get_by_test_id("ContactPhone").describe("Contact phone input")
@@ -24,6 +29,12 @@ class ContactForm:
             name="Submit",
             exact=True,
         ).describe("Contact form submit button")
+
+    @property
+    def heading(self) -> Locator:
+        """Heading that identifies the public contact form."""
+
+        return self._heading
 
     @property
     def validation_feedback(self) -> Locator:

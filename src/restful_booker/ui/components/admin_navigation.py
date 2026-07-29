@@ -27,3 +27,8 @@ class AdminNavigation:
         """End the current administrator session."""
 
         self._logout_button.click()
+
+    def open_section(self, name: str) -> None:
+        """Follow a link from the administration navigation."""
+
+        self.link(name).click()

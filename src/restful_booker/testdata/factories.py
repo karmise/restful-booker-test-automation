@@ -29,6 +29,30 @@ class TestDataFactory:
             ),
         )
 
+    def invalid_contact_message(self) -> ContactMessage:
+        """Create a complete contact message with invalid contact details."""
+
+        token = _short_token()
+        return ContactMessage(
+            name=f"Portfolio User {token}",
+            email="invalid-email",
+            phone="123",
+            subject=f"Validation check {token}",
+            message=(
+                f"This complete message isolates email and phone validation. Reference: {token}."
+            ),
+        )
+
+    def invalid_guest_details(self) -> GuestDetails:
+        """Create complete guest details with invalid email and phone values."""
+
+        return GuestDetails(
+            first_name="Portfolio",
+            last_name="Guest",
+            email="invalid-email",
+            phone="123",
+        )
+
     def booking_request(self, *, starts_in_days: int = 30, nights: int = 2) -> BookingRequest:
         if starts_in_days < 1:
             raise ValueError("starts_in_days must be at least one")

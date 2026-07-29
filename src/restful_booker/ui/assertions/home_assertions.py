@@ -1,7 +1,10 @@
 """Assertions for the public home page."""
 
-from playwright.sync_api import expect
+import re
 
+from playwright.sync_api import Page, expect
+
+from restful_booker.core import Settings
 from restful_booker.models import ContactMessage, Room
 from restful_booker.ui.pages import HomePage
 
@@ -17,8 +20,15 @@ class HomeAssertions:
         "Message may not be blank",
     )
 
-    def __init__(self, home_page: HomePage) -> None:
+    def __init__(
+        self,
+        page: Page,
+        home_page: HomePage,
+        settings: Settings,
+    ) -> None:
+        self._page = page
         self._home_page = home_page
+        self._settings = settings
 
     def room_is_available(self, room: Room) -> None:
         """Verify that a seeded room is displayed on the home page."""
@@ -37,6 +47,35 @@ class HomeAssertions:
                 feedback,
                 f"Contact validation should include: {error}",
             ).to_contain_text(error)
+
+    def contact_section_is_open(self) -> None:
+        """Verify navigation to the contact section of the home page."""
+
+        expect(
+            self._page,
+            "The Contact navigation link should target the home-page contact section",
+        ).to_have_url(
+            re.compile(
+                rf"^{re.escape(self._settings.base_url)}/?#contact$",
+            )
+        )
+        expect(
+            self._home_page.contact_form.heading,
+            "The Contact navigation link should reveal the contact form",
+        ).to_be_visible()
+
+    def invalid_contact_details_are_reported(self) -> None:
+        """Verify email and phone format validation for a complete message."""
+
+        feedback = self._home_page.contact_form.validation_feedback
+        expect(
+            feedback,
+            "Contact validation should reject a malformed email address",
+        ).to_contain_text("must be a well-formed email address")
+        expect(
+            feedback,
+            "Contact validation should reject a phone number shorter than 11 characters",
+        ).to_contain_text("Phone must be between 11 and 21 characters.")
 
     def contact_submission_is_confirmed(
         self,

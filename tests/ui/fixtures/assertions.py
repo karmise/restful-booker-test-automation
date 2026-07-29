@@ -13,10 +13,14 @@ from restful_booker.ui.pages import AdminPage, HomePage, ReservationPage
 
 
 @pytest.fixture
-def home_assertions(home_page: HomePage) -> HomeAssertions:
+def home_assertions(
+    page: Page,
+    home_page: HomePage,
+    settings: Settings,
+) -> HomeAssertions:
     """Compose assertions for the public home page."""
 
-    return HomeAssertions(home_page)
+    return HomeAssertions(page, home_page, settings)
 
 
 @pytest.fixture

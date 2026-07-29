@@ -35,6 +35,11 @@ class AdminPage:
             name="Login",
             exact=True,
         ).describe("Administrator login submit button")
+        self._report_calendar = page.get_by_role(
+            "table",
+            name="Month View",
+            exact=True,
+        ).describe("Administration booking report calendar")
         self.navigation = AdminNavigation(page)
 
     @property
@@ -52,6 +57,12 @@ class AdminPage:
             .filter(has_text="Invalid credentials")
             .describe("Invalid administrator credentials feedback")
         )
+
+    @property
+    def report_calendar(self) -> Locator:
+        """Calendar displayed on the booking report page."""
+
+        return self._report_calendar
 
     def open(self) -> AdminPage:
         """Navigate to the administration area."""

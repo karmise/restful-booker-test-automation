@@ -64,3 +64,15 @@ class AdminAssertions:
             self._admin_page.login_heading,
             "The administrator login form should be visible after redirect",
         ).to_be_visible()
+
+    def booking_report_is_open(self) -> None:
+        """Verify navigation to the authenticated booking report."""
+
+        expect(
+            self._page,
+            "The Report navigation link should open the booking report page",
+        ).to_have_url(re.compile(rf"^{re.escape(self._settings.base_url)}/admin/report/?$"))
+        expect(
+            self._admin_page.report_calendar,
+            "The booking report should display its monthly calendar",
+        ).to_be_visible()

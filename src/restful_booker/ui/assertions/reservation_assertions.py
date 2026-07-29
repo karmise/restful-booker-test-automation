@@ -84,3 +84,28 @@ class ReservationAssertions:
             feedback,
             "Guest validation should require a last name",
         ).to_contain_text("Lastname should not be blank")
+
+    def guest_entry_is_cancelled(self) -> None:
+        """Verify that cancelling restores date selection without the guest form."""
+
+        expect(
+            self._reservation_page.booking_panel.first_name_input,
+            "Cancelling guest entry should close the guest-details form",
+        ).to_be_hidden()
+        expect(
+            self._reservation_page.calendar.month_view,
+            "Cancelling guest entry should restore the reservation calendar",
+        ).to_be_visible()
+
+    def invalid_guest_contact_details_are_reported(self) -> None:
+        """Verify email and phone format validation for complete guest details."""
+
+        feedback = self._reservation_page.booking_panel.validation_feedback
+        expect(
+            feedback,
+            "Guest validation should reject a malformed email address",
+        ).to_contain_text("must be a well-formed email address")
+        expect(
+            feedback,
+            "Guest validation should reject a phone number shorter than 11 characters",
+        ).to_contain_text("size must be between 11 and 21")

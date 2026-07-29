@@ -37,7 +37,7 @@ class AdminPage:
     def invalid_credentials_feedback(self) -> Locator:
         """Authentication error displayed by the login form."""
 
-        return self._page.get_by_role("alert")
+        return self._page.get_by_role("alert").filter(has_text="Invalid credentials")
 
     def open(self) -> AdminPage:
         """Navigate to the administration area."""

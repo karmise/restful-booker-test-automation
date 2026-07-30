@@ -8,31 +8,35 @@ controlled growth. Each layer has one direction of dependency.
 ```text
 tests/ui
   |
-  +-- tests/ui/fixtures
+  +-- tests/ui/conftest.py
         |
-        +-- restful_booker.testdata
-        +-- restful_booker.models
-        +-- restful_booker.ui.assertions
+        +-- fixtures/ui
               |
-              +-- restful_booker.ui.pages
+              +-- restful_booker.testdata
+              +-- restful_booker.models
+              +-- restful_booker.ui.assertions
                     |
-                    +-- restful_booker.ui.components
+                    +-- restful_booker.ui.pages
                           |
-                          +-- Playwright
+                          +-- restful_booker.ui.components
+                                |
+                                +-- Playwright
 
 tests/api
   |
-  +-- tests/api/fixtures
+  +-- tests/api/conftest.py
         |
-        +-- restful_booker.api.testdata
-        +-- restful_booker.api.assertions
+        +-- fixtures/api
               |
-              +-- restful_booker.api.schema_registry
-              +-- restful_booker.api.clients
+              +-- restful_booker.api.testdata
+              +-- restful_booker.api.assertions
                     |
-                    +-- restful_booker.api.dto
+                    +-- restful_booker.api.schema_registry
+                    +-- restful_booker.api.clients
                           |
-                          +-- requests.Session
+                          +-- restful_booker.api.dto
+                                |
+                                +-- requests.Session
 
 tests/unit
   |
@@ -116,9 +120,10 @@ properties. A cached registry reports every violation with its JSON path.
 ### Fixtures
 
 Compose settings, models, pages, and Playwright lifecycle objects. Fixture
-modules are split by responsibility under `tests/ui/fixtures` and
-`tests/api/fixtures`. Their separate `conftest.py` files prevent API tests from
-loading Playwright-specific fixtures.
+modules form a separate root layer split by responsibility under `fixtures/ui`
+and `fixtures/api`. The suite-local `conftest.py` files only register the
+appropriate branch, preventing API tests from loading Playwright-specific
+fixtures.
 
 API resource fixtures own mutation prerequisites and cleanup. A booking fixture
 depends on a created room fixture, so pytest automatically deletes the booking

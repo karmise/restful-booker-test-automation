@@ -5,10 +5,12 @@ from http import HTTPStatus
 import allure
 import pytest
 
+from fixtures.api.resources import CreatedBooking, CreatedRoom
 from restful_booker.api.assertions import ApiAssertions, BookingAssertions
+from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import BookingClient
+from restful_booker.api.dto import BookingResponse
 from restful_booker.api.testdata import ApiTestDataFactory
-from tests.api.fixtures.resources import CreatedBooking, CreatedRoom
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -111,3 +113,69 @@ def test_anonymous_user_cannot_list_room_bookings(
         because="Booking administration data must not be exposed anonymously",
     )
     api_assertions.contains_error(response, "Authentication required")
+
+
+@pytest.mark.api
+@pytest.mark.regression
+@allure.story("Booking discovery")
+@allure.title("Administrator can retrieve a booking by identifier")
+@allure.severity(allure.severity_level.CRITICAL)
+def test_administrator_can_retrieve_booking_by_identifier(
+    admin_booking_client: BookingClient,
+    api_assertions: ApiAssertions,
+    booking_assertions: BookingAssertions,
+    created_booking: CreatedBooking,
+) -> None:
+    response = admin_booking_client.get_booking(created_booking.booking.booking_id)
+
+    api_assertions.has_status(
+        response,
+        HTTPStatus.OK,
+        because="A created booking should be available to an authenticated administrator",
+    )
+    booking_assertions.created_booking_matches(
+        BookingResponse.from_payload(response_json(response)),
+        created_booking.request,
+    )
+
+
+@pytest.mark.api
+@pytest.mark.regression
+@allure.story("Booking authorization")
+@allure.title("Anonymous user cannot retrieve a booking by identifier")
+@allure.severity(allure.severity_level.CRITICAL)
+def test_anonymous_user_cannot_retrieve_booking_by_identifier(
+    booking_client: BookingClient,
+    api_assertions: ApiAssertions,
+    created_booking: CreatedBooking,
+) -> None:
+    response = booking_client.get_booking(created_booking.booking.booking_id)
+
+    api_assertions.has_status(
+        response,
+        HTTPStatus.FORBIDDEN,
+        because="Guest personal data must not be exposed without administrator authentication",
+    )
+
+
+@pytest.mark.api
+@pytest.mark.regression
+@allure.story("Booking conflict")
+@allure.title("Overlapping booking for the same room is rejected")
+@allure.severity(allure.severity_level.CRITICAL)
+def test_overlapping_booking_for_same_room_is_rejected(
+    booking_client: BookingClient,
+    api_assertions: ApiAssertions,
+    api_test_data_factory: ApiTestDataFactory,
+    created_booking: CreatedBooking,
+) -> None:
+    request = api_test_data_factory.overlapping_booking(created_booking.request)
+
+    response = booking_client.create_booking(request)
+
+    api_assertions.has_status(
+        response,
+        HTTPStatus.CONFLICT,
+        because="The same room must not be double-booked for overlapping dates",
+    )
+    api_assertions.contains_error(response, "Failed to create booking")

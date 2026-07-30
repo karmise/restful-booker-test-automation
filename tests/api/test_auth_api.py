@@ -88,3 +88,23 @@ def test_issued_token_is_accepted_by_validation(
         because="A freshly issued authentication token should be valid",
     )
     auth_assertions.token_is_valid(response_json(validation_response))
+
+
+@pytest.mark.api
+@pytest.mark.regression
+@allure.story("Token validation")
+@allure.title("Unknown authentication token is rejected")
+@allure.severity(allure.severity_level.CRITICAL)
+def test_unknown_authentication_token_is_rejected(
+    auth_client: AuthClient,
+    api_assertions: ApiAssertions,
+    unknown_authentication_token: str,
+) -> None:
+    response = auth_client.validate(unknown_authentication_token)
+
+    api_assertions.has_status(
+        response,
+        HTTPStatus.FORBIDDEN,
+        because="An unknown token must not authorize administrator operations",
+    )
+    api_assertions.contains_error(response, "Invalid token")

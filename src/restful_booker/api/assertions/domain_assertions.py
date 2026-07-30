@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from restful_booker.api.dto import (
+    ApiBookingDates,
     BookingRequest,
     BookingResponse,
     MessageRequest,
     MessageSummary,
+    RoomCollection,
     RoomRequest,
     RoomResponse,
     TokenResponse,
@@ -67,6 +69,21 @@ class RoomAssertions:
             f"Created room price should be {expected.room_price}, got {actual.room_price}"
         )
 
+    @report_step("Verify that the occupied room is absent from availability")
+    def room_is_not_listed(
+        self,
+        collection: RoomCollection,
+        *,
+        room_id: int,
+    ) -> None:
+        """Verify that an occupied room is excluded from a date-filtered search."""
+
+        listed_ids = [room.room_id for room in collection.rooms]
+        assert room_id not in listed_ids, (
+            f"Occupied room {room_id} should not be available, "
+            f"but returned room identifiers were {listed_ids}"
+        )
+
 
 class BookingAssertions:
     """Booking-domain checks."""
@@ -117,6 +134,14 @@ class MessageAssertions:
         )
         assert actual.is_read is False, "A newly created contact message should be unread"
 
+    @report_step("Verify that the contact message is marked as read")
+    def message_is_read(self, actual: MessageSummary) -> None:
+        """Verify the administrator read-state transition."""
+
+        assert actual.is_read is True, (
+            f"Message {actual.message_id} should be marked as read after the update"
+        )
+
 
 class BrandingAssertions:
     """Branding-domain checks."""
@@ -143,4 +168,24 @@ class ReportAssertions:
 
         assert payload == {"report": []}, (
             f"A newly created room should have an empty report, got {payload}"
+        )
+
+    @report_step("Verify that booked dates are unavailable in the room report")
+    def contains_unavailable_period(
+        self,
+        payload: object,
+        expected: ApiBookingDates,
+    ) -> None:
+        """Verify that a created booking blocks its complete stay period."""
+
+        assert isinstance(payload, dict), "Room report response must be a JSON object"
+        entries = payload.get("report")
+        assert isinstance(entries, list), "Room report must contain a list under 'report'"
+        expected_entry = {
+            "start": expected.check_in.isoformat(),
+            "end": expected.check_out.isoformat(),
+            "title": "Unavailable",
+        }
+        assert expected_entry in entries, (
+            f"Room report should contain unavailable period {expected_entry}, got {entries}"
         )

@@ -42,7 +42,7 @@ jobs:
         run: poetry run ruff check .
 
       - name: Run type checking
-        run: poetry run mypy src tests
+        run: poetry run mypy src fixtures tests
 
   api:
     name: API / Python 3.12

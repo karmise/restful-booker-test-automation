@@ -6,6 +6,8 @@ from restful_booker.api.dto import AuthRequest, MessageRequest, RoomRequest
 from restful_booker.api.testdata import ApiTestDataFactory
 from restful_booker.core import Settings
 
+_MISSING_RESOURCE_ID = 2_000_000_000
+
 
 @pytest.fixture(scope="session")
 def api_test_data_factory() -> ApiTestDataFactory:
@@ -34,6 +36,13 @@ def invalid_api_credentials(
 
 
 @pytest.fixture
+def unknown_authentication_token(
+    api_test_data_factory: ApiTestDataFactory,
+) -> str:
+    return api_test_data_factory.unknown_authentication_token()
+
+
+@pytest.fixture
 def room_request(api_test_data_factory: ApiTestDataFactory) -> RoomRequest:
     return api_test_data_factory.room_request()
 
@@ -43,3 +52,10 @@ def invalid_message_request(
     api_test_data_factory: ApiTestDataFactory,
 ) -> MessageRequest:
     return api_test_data_factory.message_with_invalid_email()
+
+
+@pytest.fixture(scope="session")
+def missing_resource_id() -> int:
+    """Provide a valid integer identifier outside the sandbox's generated range."""
+
+    return _MISSING_RESOURCE_ID

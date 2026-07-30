@@ -1,6 +1,6 @@
 """API fixture imports scoped to the API test suite."""
 
-from tests.api.fixtures.assertions import (
+from fixtures.api.assertions import (
     api_assertions,
     auth_assertions,
     booking_assertions,
@@ -10,7 +10,7 @@ from tests.api.fixtures.assertions import (
     room_assertions,
     schema_registry,
 )
-from tests.api.fixtures.clients import (
+from fixtures.api.clients import (
     admin_booking_client,
     admin_message_client,
     admin_room_client,
@@ -23,15 +23,17 @@ from tests.api.fixtures.clients import (
     report_client,
     room_client,
 )
-from tests.api.fixtures.configuration import settings
-from tests.api.fixtures.data import (
+from fixtures.api.configuration import settings
+from fixtures.api.data import (
     api_test_data_factory,
     invalid_api_credentials,
     invalid_message_request,
+    missing_resource_id,
     room_request,
+    unknown_authentication_token,
     valid_api_credentials,
 )
-from tests.api.fixtures.resources import (
+from fixtures.api.resources import (
     created_booking,
     created_message,
     created_room,
@@ -57,6 +59,7 @@ __all__ = [
     "invalid_message_request",
     "message_assertions",
     "message_client",
+    "missing_resource_id",
     "public_session",
     "report_assertions",
     "report_client",
@@ -65,5 +68,6 @@ __all__ = [
     "room_request",
     "schema_registry",
     "settings",
+    "unknown_authentication_token",
     "valid_api_credentials",
 ]

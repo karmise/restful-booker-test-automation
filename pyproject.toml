@@ -44,7 +44,7 @@ addopts = [
     "--tracing=retain-on-failure",
 ]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 log_cli = false
 log_cli_level = "INFO"
 log_level = "INFO"
@@ -82,7 +82,7 @@ select = [
 
 [tool.mypy]
 python_version = "3.11"
-files = ["src", "tests"]
+files = ["src", "fixtures", "tests"]
 check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_defs = true

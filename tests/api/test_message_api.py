@@ -5,10 +5,11 @@ from http import HTTPStatus
 import allure
 import pytest
 
+from fixtures.api.resources import CreatedMessage
 from restful_booker.api.assertions import ApiAssertions, MessageAssertions
+from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import MessageClient
-from restful_booker.api.dto import MessageRequest
-from tests.api.fixtures.resources import CreatedMessage
+from restful_booker.api.dto import MessageCollection, MessageRequest
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -78,4 +79,61 @@ def test_anonymous_user_cannot_delete_message(
         response,
         HTTPStatus.FORBIDDEN,
         because="Only an authenticated administrator may delete contact messages",
+    )
+
+
+@pytest.mark.api
+@pytest.mark.regression
+@allure.story("Message administration")
+@allure.title("Administrator can mark a contact message as read")
+@allure.severity(allure.severity_level.NORMAL)
+def test_administrator_can_mark_contact_message_as_read(
+    admin_message_client: MessageClient,
+    message_client: MessageClient,
+    api_assertions: ApiAssertions,
+    message_assertions: MessageAssertions,
+    created_message: CreatedMessage,
+) -> None:
+    update_response = admin_message_client.mark_as_read(
+        created_message.message.message_id,
+    )
+    collection_response = message_client.get_messages()
+
+    api_assertions.has_status(
+        update_response,
+        HTTPStatus.ACCEPTED,
+        because="An administrator should be able to acknowledge a contact message",
+    )
+    api_assertions.has_status(
+        collection_response,
+        HTTPStatus.OK,
+        because="The updated contact message should remain discoverable",
+    )
+    message_assertions.message_is_read(
+        MessageCollection.from_payload(response_json(collection_response)).find_by_subject(
+            created_message.request.subject
+        )
+    )
+
+
+@pytest.mark.api
+@pytest.mark.regression
+@pytest.mark.xfail(
+    reason="Known RBP defect: an unknown message returns 500 instead of 404",
+    strict=True,
+)
+@allure.story("Message discovery")
+@allure.title("Unknown message identifier returns not found")
+@allure.severity(allure.severity_level.NORMAL)
+def test_unknown_message_identifier_returns_not_found(
+    message_client: MessageClient,
+    api_assertions: ApiAssertions,
+    missing_resource_id: int,
+) -> None:
+    response = message_client.get_message(missing_resource_id)
+
+    api_assertions.has_status(
+        response,
+        HTTPStatus.NOT_FOUND,
+        because="An unknown message identifier should not be reported as a server failure",
     )

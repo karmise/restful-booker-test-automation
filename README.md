@@ -7,7 +7,7 @@
 A layered Python test automation framework for the
 [Restful Booker Platform](https://automationintesting.online).
 
-The project contains 45 automated tests: 15 browser scenarios, 15 API
+The project contains 56 automated tests: 15 browser scenarios, 26 API
 scenarios covering six external service contracts, and 15 fast unit tests for
 the framework itself.
 
@@ -19,7 +19,7 @@ The framework separates test intent from transport mechanics:
 
 ```text
 tests/ui
-  -> UI fixtures
+  -> fixtures/ui
     -> assertion objects
       -> page objects
         -> reusable UI components
@@ -27,7 +27,7 @@ tests/ui
       -> Playwright
 
 tests/api
-  -> API fixtures and resource lifecycles
+  -> fixtures/api
     -> assertion objects and JSON Schemas
       -> service clients
         -> request and response DTOs
@@ -48,8 +48,8 @@ tests/unit
 - `api/schemas` contains Draft 2020-12 JSON Schemas.
 - `api/assertions` separates protocol, contract, and business checks.
 - `api/testdata` creates unique API-owned resources.
-- `tests/ui/fixtures` composes UI objects and controls their lifecycle.
-- `tests/api/fixtures` authenticates and guarantees reverse-order cleanup.
+- `fixtures/ui` composes UI objects and controls their lifecycle.
+- `fixtures/api` authenticates and guarantees reverse-order resource cleanup.
 - `tests/unit` verifies framework behavior without a browser or network.
 
 Fixture registration is scoped by test type. API tests never load Playwright
@@ -90,7 +90,7 @@ overridden. The public sandbox credentials are intentionally non-secret.
 ```bash
 poetry run ruff format --check .
 poetry run ruff check .
-poetry run mypy src tests
+poetry run mypy src fixtures tests
 poetry run pytest tests/unit
 poetry run pytest tests/api
 poetry run pytest tests/ui
@@ -185,16 +185,18 @@ tests under `artifacts/`.
 
 | Service | Scenarios |
 | --- | --- |
-| Auth | Token contract, invalid credentials, token validation |
-| Room | Collection contract, isolated creation, authorization |
-| Booking | Isolated creation, field and date validation, authorization |
-| Message | Isolated creation, email validation, authorization |
+| Auth | Token contract, credential validation, valid and unknown tokens |
+| Room | Collection and item discovery, creation, authorization, date availability |
+| Booking | Creation and item discovery, validation, authorization, overlap conflict |
+| Message | Creation and item discovery, validation, authorization, read-state transition |
 | Branding | Public branding contract and business identity |
-| Report | Empty availability report for a newly created room |
+| Report | Empty room availability and a booked unavailable period |
 
 Six Draft 2020-12 schemas validate the external contracts consumed by the UI.
 Lifecycle fixtures create unique rooms, bookings, and messages, then remove
 them in reverse dependency order even after a failed assertion.
+Two strict expected-failure scenarios document known sandbox defects where
+unknown room and message identifiers return `500` instead of `404`.
 
 GitHub Actions runs quality checks, framework unit tests, the API suite, and the
 Chromium UI suite as separate jobs on Python 3.12. Their results are merged into

@@ -23,6 +23,11 @@ class ApiTestDataFactory:
 
         return AuthRequest(username=username, password=password)
 
+    def unknown_authentication_token(self) -> str:
+        """Build a token value that cannot have been issued by the service."""
+
+        return f"invalid-{uuid4().hex}"
+
     def room_request(self) -> RoomRequest:
         """Build a uniquely named room owned by the current test."""
 
@@ -82,6 +87,17 @@ class ApiTestDataFactory:
                 check_in=valid.dates.check_in,
                 check_out=valid.dates.check_in - timedelta(days=1),
             ),
+        )
+
+    def overlapping_booking(self, existing: BookingRequest) -> BookingRequest:
+        """Build another guest booking for an already occupied period."""
+
+        token = _short_token()
+        return replace(
+            existing,
+            first_name="Overlap",
+            last_name=f"Guest{token}",
+            email=f"overlap.{token}@example.com",
         )
 
     def message_request(self) -> MessageRequest:

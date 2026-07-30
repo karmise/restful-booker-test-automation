@@ -16,6 +16,12 @@ class MessageClient(BaseApiClient):
 
         return self._request("GET", "/message")
 
+    @report_step("Request a contact message by identifier")
+    def get_message(self, message_id: int) -> Response:
+        """Return one complete contact message."""
+
+        return self._request("GET", f"/message/{message_id}")
+
     @report_step("Create a contact message")
     def create_message(self, message: MessageRequest) -> Response:
         """Create a contact message."""

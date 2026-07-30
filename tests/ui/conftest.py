@@ -9,13 +9,13 @@ from _pytest.reports import TestReport
 from _pytest.runner import CallInfo
 from playwright.sync_api import Page
 
-from tests.ui.fixtures.assertions import (
+from fixtures.ui.assertions import (
     admin_assertions,
     home_assertions,
     reservation_assertions,
 )
-from tests.ui.fixtures.configuration import configure_page, settings
-from tests.ui.fixtures.data import (
+from fixtures.ui.configuration import configure_page, settings
+from fixtures.ui.data import (
     admin_credentials,
     booking_request,
     contact_message,
@@ -25,7 +25,7 @@ from tests.ui.fixtures.data import (
     invalid_guest_details,
     test_data_factory,
 )
-from tests.ui.fixtures.pages import admin_page, home_page, reservation_page
+from fixtures.ui.pages import admin_page, home_page, reservation_page
 
 _PHASE_REPORTS = pytest.StashKey[dict[str, TestReport]]()
 

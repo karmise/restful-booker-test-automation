@@ -16,6 +16,7 @@ playwright = ">=1.50,<2.0"
 pytest = ">=8.3,<9.0"
 pytest-playwright = ">=0.6,<1.0"
 requests = ">=2.32,<3.0"
+allure-pytest = ">=2.16,<3.0"
 
 [tool.poetry.group.quality.dependencies]
 mypy = ">=1.14,<2.0"
@@ -31,6 +32,8 @@ addopts = [
     "-ra",
     "--strict-config",
     "--strict-markers",
+    "--alluredir=allure-results",
+    "--clean-alluredir",
     "--output=artifacts",
     "--screenshot=only-on-failure",
     "--tracing=retain-on-failure",

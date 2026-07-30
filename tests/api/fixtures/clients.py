@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator
 
+import allure
 import pytest
 from requests import Session
 
@@ -28,6 +29,7 @@ def public_session() -> Iterator[Session]:
 
 
 @pytest.fixture(scope="session")
+@allure.title("Authenticate the API administrator")
 def authenticated_session(settings: Settings) -> Iterator[Session]:
     """Authenticate once and reuse the administrator token across API tests."""
 
@@ -38,20 +40,22 @@ def authenticated_session(settings: Settings) -> Iterator[Session]:
             base_url=settings.base_url,
             timeout_s=settings.api_timeout_s,
         )
-        response = auth_client.login(
-            AuthRequest(
-                username=settings.admin_username,
-                password=settings.admin_password,
+        with allure.step("Exchange administrator credentials for a session token"):
+            response = auth_client.login(
+                AuthRequest(
+                    username=settings.admin_username,
+                    password=settings.admin_password,
+                )
             )
-        )
         if response.status_code != 200:
             raise RuntimeError(
                 "API fixture could not authenticate the administrator: "
                 f"{response.status_code} {response.text}"
             )
 
-        token = TokenResponse.from_payload(response_json(response)).token
-        session.cookies.set("token", token)
+        with allure.step("Store the administrator token in the HTTP session"):
+            token = TokenResponse.from_payload(response_json(response)).token
+            session.cookies.set("token", token)
         yield session
 
 

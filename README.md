@@ -58,6 +58,7 @@ the [locator strategy](docs/locator-strategy.md).
 
 - Python 3.12
 - Poetry 2.x
+- Allure Report CLI and Java 8+ to render or open HTML reports
 
 ## Local setup
 
@@ -86,6 +87,42 @@ Run an individual area:
 poetry run pytest tests/ui/test_home_page.py
 poetry run pytest tests/api/test_booking_api.py
 ```
+
+Every pytest run replaces `allure-results/` with fresh Allure result files.
+
+## Allure reports
+
+Tests are organized in Allure by epic, feature, story, readable title, and
+severity. High-level steps describe actions and expected outcomes. API
+lifecycle fixtures include setup and cleanup steps, Python logs are attached to
+results automatically, and failed UI tests include a full-page screenshot.
+The report also records the base URL, operating system, and Python version.
+
+Install the Allure command-line tool on macOS:
+
+```bash
+brew install allure
+allure --version
+```
+
+Run any test scope and open a temporary report:
+
+```bash
+poetry run pytest tests/api
+allure serve allure-results
+```
+
+Generate a persistent HTML report:
+
+```bash
+allure generate allure-results --clean -o allure-report
+allure open allure-report
+```
+
+`allure-pytest` is managed by Poetry and writes structured results.
+The separately installed Allure CLI converts those results into HTML.
+Both `allure-results/` and `allure-report/` are local generated artifacts and
+are excluded from Git.
 
 ## API request logging
 
@@ -141,8 +178,8 @@ Lifecycle fixtures create unique rooms, bookings, and messages, then remove
 them in reverse dependency order even after a failed assertion.
 
 GitHub Actions runs quality checks, the API suite, and the Chromium UI suite as
-separate jobs on Python 3.12. Browser failure artifacts are retained for seven
-days.
+separate jobs on Python 3.12. Allure results are uploaded after every API and UI
+run. Browser failure artifacts are retained for seven days.
 
 ## Environment variables
 

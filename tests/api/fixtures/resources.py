@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from dataclasses import dataclass
 
+import allure
 import pytest
 from requests import Response
 
@@ -49,6 +50,7 @@ class CreatedMessage:
 
 
 @pytest.fixture
+@allure.title("Create an isolated API room")
 def created_room(
     admin_room_client: RoomClient,
     room_client: RoomClient,
@@ -56,13 +58,16 @@ def created_room(
 ) -> Iterator[CreatedRoom]:
     """Create a unique room and always remove it after dependent resources."""
 
-    create_response = admin_room_client.create_room(room_request)
-    _require_status(create_response, 200, resource="room creation")
-    collection_response = room_client.get_rooms()
-    _require_status(collection_response, 200, resource="room discovery")
-    room = RoomCollection.from_payload(response_json(collection_response)).find_by_name(
-        room_request.room_name
-    )
+    with allure.step("Create a unique room as administrator"):
+        create_response = admin_room_client.create_room(room_request)
+        _require_status(create_response, 200, resource="room creation")
+
+    with allure.step("Discover the created room in the public collection"):
+        collection_response = room_client.get_rooms()
+        _require_status(collection_response, 200, resource="room discovery")
+        room = RoomCollection.from_payload(response_json(collection_response)).find_by_name(
+            room_request.room_name
+        )
 
     try:
         yield CreatedRoom(
@@ -72,11 +77,13 @@ def created_room(
             room=room,
         )
     finally:
-        delete_response = admin_room_client.delete_room(room.room_id)
-        _require_status(delete_response, 202, resource=f"room {room.room_id} cleanup")
+        with allure.step("Delete the isolated room"):
+            delete_response = admin_room_client.delete_room(room.room_id)
+            _require_status(delete_response, 202, resource=f"room {room.room_id} cleanup")
 
 
 @pytest.fixture
+@allure.title("Create an isolated API booking")
 def created_booking(
     booking_client: BookingClient,
     admin_booking_client: BookingClient,
@@ -85,17 +92,20 @@ def created_booking(
 ) -> Iterator[CreatedBooking]:
     """Create a booking for the test room and delete it before room cleanup."""
 
-    request = api_test_data_factory.booking_request(
-        room_id=created_room.room.room_id,
-    )
-    create_response = booking_client.create_booking(request)
-    _require_status(create_response, 201, resource="booking creation")
-    collection_response = admin_booking_client.get_bookings_for_room(created_room.room.room_id)
-    _require_status(collection_response, 200, resource="booking discovery")
-    booking = BookingCollection.from_payload(response_json(collection_response)).find_by_guest(
-        first_name=request.first_name,
-        last_name=request.last_name,
-    )
+    with allure.step("Create a booking for the isolated room"):
+        request = api_test_data_factory.booking_request(
+            room_id=created_room.room.room_id,
+        )
+        create_response = booking_client.create_booking(request)
+        _require_status(create_response, 201, resource="booking creation")
+
+    with allure.step("Discover the created booking as administrator"):
+        collection_response = admin_booking_client.get_bookings_for_room(created_room.room.room_id)
+        _require_status(collection_response, 200, resource="booking discovery")
+        booking = BookingCollection.from_payload(response_json(collection_response)).find_by_guest(
+            first_name=request.first_name,
+            last_name=request.last_name,
+        )
 
     try:
         yield CreatedBooking(
@@ -105,15 +115,17 @@ def created_booking(
             booking=booking,
         )
     finally:
-        delete_response = admin_booking_client.delete_booking(booking.booking_id)
-        _require_status(
-            delete_response,
-            202,
-            resource=f"booking {booking.booking_id} cleanup",
-        )
+        with allure.step("Delete the isolated booking"):
+            delete_response = admin_booking_client.delete_booking(booking.booking_id)
+            _require_status(
+                delete_response,
+                202,
+                resource=f"booking {booking.booking_id} cleanup",
+            )
 
 
 @pytest.fixture
+@allure.title("Create an isolated API contact message")
 def created_message(
     message_client: MessageClient,
     admin_message_client: MessageClient,
@@ -121,14 +133,17 @@ def created_message(
 ) -> Iterator[CreatedMessage]:
     """Create a unique contact message and always delete it."""
 
-    request = api_test_data_factory.message_request()
-    create_response = message_client.create_message(request)
-    _require_status(create_response, 200, resource="message creation")
-    collection_response = message_client.get_messages()
-    _require_status(collection_response, 200, resource="message discovery")
-    message = MessageCollection.from_payload(response_json(collection_response)).find_by_subject(
-        request.subject
-    )
+    with allure.step("Create a unique public contact message"):
+        request = api_test_data_factory.message_request()
+        create_response = message_client.create_message(request)
+        _require_status(create_response, 200, resource="message creation")
+
+    with allure.step("Discover the created message in administration"):
+        collection_response = message_client.get_messages()
+        _require_status(collection_response, 200, resource="message discovery")
+        message = MessageCollection.from_payload(
+            response_json(collection_response)
+        ).find_by_subject(request.subject)
 
     try:
         yield CreatedMessage(
@@ -138,12 +153,13 @@ def created_message(
             message=message,
         )
     finally:
-        delete_response = admin_message_client.delete_message(message.message_id)
-        _require_status(
-            delete_response,
-            202,
-            resource=f"message {message.message_id} cleanup",
-        )
+        with allure.step("Delete the isolated contact message"):
+            delete_response = admin_message_client.delete_message(message.message_id)
+            _require_status(
+                delete_response,
+                202,
+                resource=f"message {message.message_id} cleanup",
+            )
 
 
 def _require_status(response: Response, expected: int, *, resource: str) -> None:

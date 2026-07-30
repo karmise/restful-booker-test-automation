@@ -115,6 +115,21 @@ depends on a created room fixture, so pytest automatically deletes the booking
 before deleting its room. Cleanup status is validated and failures are reported
 as teardown errors instead of silently leaking test data.
 
+### Reporting
+
+Allure is integrated at the test orchestration boundary instead of inside page
+objects, components, DTOs, or HTTP transport. Tests own business-level steps and
+behavior metadata; resource fixtures own preparation and cleanup steps. This
+keeps reporting concerns out of lower layers and prevents decorated function
+arguments from exposing passwords, tokens, or complete DTO values as Allure
+parameters.
+
+Every pytest run writes fresh structured results to `allure-results`. API logs
+are captured as attachments, failed UI scenarios attach the final full-page
+screenshot, and a session hook records stable execution environment properties.
+The Allure CLI converts these result files into the ignored `allure-report`
+HTML artifact.
+
 ### Tests
 
 Describe scenarios through actions and domain assertions. Tests do not import

@@ -70,6 +70,15 @@ jobs:
         env:
           RBP_BASE_URL: https://automationintesting.online
 
+      - name: Upload API Allure results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-allure-results
+          path: allure-results/
+          if-no-files-found: warn
+          retention-days: 7
+
   chromium:
     name: UI / Chromium / Python 3.12
     needs: quality
@@ -98,6 +107,15 @@ jobs:
         run: poetry run pytest tests/ui
         env:
           RBP_BASE_URL: https://automationintesting.online
+
+      - name: Upload UI Allure results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-allure-results
+          path: allure-results/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload failure artifacts
         if: failure()

@@ -6,6 +6,7 @@ from playwright.sync_api import Page, expect
 
 from restful_booker.core import Settings
 from restful_booker.models import Room, StayPeriod
+from restful_booker.reporting import report_step
 from restful_booker.ui.pages import ReservationPage
 
 
@@ -22,6 +23,7 @@ class ReservationAssertions:
         self._reservation_page = reservation_page
         self._settings = settings
 
+    @report_step("Verify that the selected room reservation page is open")
     def selected_room_is_open(self, room: Room) -> None:
         """Verify navigation from a room card to its reservation page."""
 
@@ -39,6 +41,7 @@ class ReservationAssertions:
             f"Reservation page should identify the selected '{room.name}' room",
         ).to_be_visible()
 
+    @report_step("Verify the selected room details")
     def room_details_are_displayed(self, room: Room) -> None:
         """Verify the primary room information and seeded features."""
 
@@ -56,6 +59,7 @@ class ReservationAssertions:
                 f"The '{room.name}' room should list the '{feature}' feature",
             ).to_be_visible()
 
+    @report_step("Verify the nightly calculation and final price")
     def price_summary_matches(self, room: Room, stay: StayPeriod) -> None:
         """Verify the nightly calculation and fixed service fees."""
 
@@ -72,6 +76,7 @@ class ReservationAssertions:
             "Reservation total should include the room price and £40 fixed fees",
         ).to_be_visible()
 
+    @report_step("Verify required guest-name validation messages")
     def required_guest_name_errors_are_displayed(self) -> None:
         """Verify required first-name and last-name validation."""
 
@@ -85,6 +90,7 @@ class ReservationAssertions:
             "Guest validation should require a last name",
         ).to_contain_text("Lastname should not be blank")
 
+    @report_step("Verify that guest entry is cancelled")
     def guest_entry_is_cancelled(self) -> None:
         """Verify that cancelling restores date selection without the guest form."""
 
@@ -97,6 +103,7 @@ class ReservationAssertions:
             "Cancelling guest entry should restore the reservation calendar",
         ).to_be_visible()
 
+    @report_step("Verify guest contact validation messages")
     def invalid_guest_contact_details_are_reported(self) -> None:
         """Verify email and phone format validation for complete guest details."""
 

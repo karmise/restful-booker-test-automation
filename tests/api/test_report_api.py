@@ -11,6 +11,9 @@ from restful_booker.api.clients import ReportClient
 from tests.api.fixtures.resources import CreatedRoom
 
 pytestmark = [
+    allure.parent_suite("Restful Booker Platform"),
+    allure.suite("API tests"),
+    allure.sub_suite("Report service"),
     allure.epic("REST API"),
     allure.feature("Report service"),
 ]
@@ -27,14 +30,12 @@ def test_new_room_report_matches_contract(
     report_assertions: ReportAssertions,
     created_room: CreatedRoom,
 ) -> None:
-    with allure.step("Request the availability report for a new room"):
-        response = report_client.get_room_report(created_room.room.room_id)
+    response = report_client.get_room_report(created_room.room.room_id)
 
-    with allure.step("Verify the empty room report contract"):
-        api_assertions.has_status(
-            response,
-            HTTPStatus.OK,
-            because="The reservation calendar requires a room availability report",
-        )
-        api_assertions.matches_schema(response, "report")
-        report_assertions.has_no_entries_for_new_room(response_json(response))
+    api_assertions.has_status(
+        response,
+        HTTPStatus.OK,
+        because="The reservation calendar requires a room availability report",
+    )
+    api_assertions.matches_schema(response, "report")
+    report_assertions.has_no_entries_for_new_room(response_json(response))

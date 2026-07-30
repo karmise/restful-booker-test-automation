@@ -10,6 +10,7 @@ from requests import Response
 
 from restful_booker.api.schema_registry import SchemaRegistry
 from restful_booker.api.types import JsonValue
+from restful_booker.reporting import report_step
 
 
 class ApiAssertions:
@@ -18,6 +19,7 @@ class ApiAssertions:
     def __init__(self, schema_registry: SchemaRegistry) -> None:
         self._schema_registry = schema_registry
 
+    @report_step("Verify the HTTP response status")
     def has_status(
         self,
         response: Response,
@@ -35,6 +37,7 @@ class ApiAssertions:
             f"Response body: {response.text}"
         )
 
+    @report_step("Validate the JSON response schema")
     def matches_schema(self, response: Response, schema_name: str) -> None:
         """Verify a successful JSON response against a named contract."""
 
@@ -45,6 +48,7 @@ class ApiAssertions:
         )
         self._schema_registry.validate(_response_json(response), schema_name)
 
+    @report_step("Verify the API error message")
     def contains_error(self, response: Response, expected_text: str) -> None:
         """Verify a user-facing error across the platform's error envelope variants."""
 
@@ -57,6 +61,7 @@ class ApiAssertions:
             f"Expected API error to contain '{expected_text}', but response was: {rendered}"
         )
 
+    @report_step("Verify the successful mutation result")
     def success_flag_is_true(self, response: Response) -> None:
         """Verify the proxy's successful mutation envelope."""
 

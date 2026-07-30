@@ -6,6 +6,7 @@ from playwright.sync_api import Page, expect
 
 from restful_booker.core import Settings
 from restful_booker.models import ContactMessage, Room
+from restful_booker.reporting import report_step
 from restful_booker.ui.pages import HomePage
 
 
@@ -30,6 +31,7 @@ class HomeAssertions:
         self._home_page = home_page
         self._settings = settings
 
+    @report_step("Verify that the seeded room is available")
     def room_is_available(self, room: Room) -> None:
         """Verify that a seeded room is displayed on the home page."""
 
@@ -38,6 +40,7 @@ class HomeAssertions:
             f"Seeded room '{room.name}' should be available on the home page",
         ).to_be_visible()
 
+    @report_step("Verify required contact-field validation messages")
     def required_contact_errors_are_displayed(self) -> None:
         """Verify the complete required-field validation contract."""
 
@@ -48,6 +51,7 @@ class HomeAssertions:
                 f"Contact validation should include: {error}",
             ).to_contain_text(error)
 
+    @report_step("Verify that the contact section is open")
     def contact_section_is_open(self) -> None:
         """Verify navigation to the contact section of the home page."""
 
@@ -64,6 +68,7 @@ class HomeAssertions:
             "The Contact navigation link should reveal the contact form",
         ).to_be_visible()
 
+    @report_step("Verify contact format validation messages")
     def invalid_contact_details_are_reported(self) -> None:
         """Verify email and phone format validation for a complete message."""
 
@@ -77,6 +82,7 @@ class HomeAssertions:
             "Contact validation should reject a phone number shorter than 11 characters",
         ).to_contain_text("Phone must be between 11 and 21 characters.")
 
+    @report_step("Verify that the contact message is accepted")
     def contact_submission_is_confirmed(
         self,
         contact_message: ContactMessage,

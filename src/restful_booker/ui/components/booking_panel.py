@@ -3,6 +3,7 @@
 from playwright.sync_api import Locator, Page
 
 from restful_booker.models import GuestDetails
+from restful_booker.reporting import report_step
 
 
 class BookingPanel:
@@ -65,22 +66,26 @@ class BookingPanel:
             exact=True,
         ).describe(f"Reservation total £{amount}")
 
+    @report_step("Open the guest-details form")
     def open_guest_form(self) -> None:
         """Move from date selection to the guest-details form."""
 
         self._reserve_button.click()
         self._first_name.wait_for(state="visible")
 
+    @report_step("Cancel guest details entry")
     def cancel_guest_form(self) -> None:
         """Discard guest entry and return to date selection."""
 
         self._cancel_button.click()
 
+    @report_step("Submit an empty guest-details form")
     def submit_empty_guest_form(self) -> None:
         """Submit the guest form without entering personal data."""
 
         self._reserve_button.click()
 
+    @report_step("Submit guest details")
     def submit_guest_details(self, guest: GuestDetails) -> None:
         """Fill and submit the currently open guest-details form."""
 

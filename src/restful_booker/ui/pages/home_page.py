@@ -5,6 +5,7 @@ from __future__ import annotations
 from playwright.sync_api import Locator, Page
 
 from restful_booker.core import Settings
+from restful_booker.reporting import report_step
 from restful_booker.ui.components import ContactForm, Header
 
 
@@ -25,6 +26,7 @@ class HomePage:
         self.header = Header(page)
         self.contact_form = ContactForm(page)
 
+    @report_step("Open the home page")
     def open(self) -> HomePage:
         """Navigate to the public landing page."""
 
@@ -44,6 +46,7 @@ class HomePage:
             .describe(f"Room card for '{room_name}'")
         )
 
+    @report_step("Open the selected room")
     def open_room(self, room_name: str) -> None:
         """Open the reservation page from a named room card."""
 

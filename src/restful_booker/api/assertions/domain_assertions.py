@@ -11,11 +11,13 @@ from restful_booker.api.dto import (
     RoomResponse,
     TokenResponse,
 )
+from restful_booker.reporting import report_step
 
 
 class AuthAssertions:
     """Authentication-domain checks."""
 
+    @report_step("Verify that an authentication token was issued")
     def token_was_issued(self, token: TokenResponse) -> None:
         """Verify the public token contract."""
 
@@ -23,6 +25,7 @@ class AuthAssertions:
             f"Authentication token should contain at least 16 characters, got {len(token.token)}"
         )
 
+    @report_step("Verify that the authentication token is valid")
     def token_is_valid(self, payload: object) -> None:
         """Verify token validation response semantics."""
 
@@ -34,6 +37,7 @@ class AuthAssertions:
 class RoomAssertions:
     """Room-domain checks."""
 
+    @report_step("Verify that the created room matches the request")
     def created_room_matches(
         self,
         actual: RoomResponse,
@@ -67,6 +71,7 @@ class RoomAssertions:
 class BookingAssertions:
     """Booking-domain checks."""
 
+    @report_step("Verify that the created booking matches the request")
     def created_booking_matches(
         self,
         actual: BookingResponse,
@@ -96,6 +101,7 @@ class BookingAssertions:
 class MessageAssertions:
     """Message-domain checks."""
 
+    @report_step("Verify that the created message matches the request")
     def created_message_matches(
         self,
         actual: MessageSummary,
@@ -115,6 +121,7 @@ class MessageAssertions:
 class BrandingAssertions:
     """Branding-domain checks."""
 
+    @report_step("Verify the public property branding")
     def identifies_property(self, payload: object) -> None:
         """Verify that branding contains the property and contact identity."""
 
@@ -130,6 +137,7 @@ class BrandingAssertions:
 class ReportAssertions:
     """Report-domain checks."""
 
+    @report_step("Verify that a new room has no unavailable periods")
     def has_no_entries_for_new_room(self, payload: object) -> None:
         """Verify that a newly created room starts without unavailable periods."""
 

@@ -40,22 +40,20 @@ def authenticated_session(settings: Settings) -> Iterator[Session]:
             base_url=settings.base_url,
             timeout_s=settings.api_timeout_s,
         )
-        with allure.step("Exchange administrator credentials for a session token"):
-            response = auth_client.login(
-                AuthRequest(
-                    username=settings.admin_username,
-                    password=settings.admin_password,
-                )
+        response = auth_client.login(
+            AuthRequest(
+                username=settings.admin_username,
+                password=settings.admin_password,
             )
+        )
         if response.status_code != 200:
             raise RuntimeError(
                 "API fixture could not authenticate the administrator: "
                 f"{response.status_code} {response.text}"
             )
 
-        with allure.step("Store the administrator token in the HTTP session"):
-            token = TokenResponse.from_payload(response_json(response)).token
-            session.cookies.set("token", token)
+        token = TokenResponse.from_payload(response_json(response)).token
+        session.cookies.set("token", token)
         yield session
 
 

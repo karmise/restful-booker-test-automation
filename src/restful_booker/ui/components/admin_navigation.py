@@ -2,6 +2,8 @@
 
 from playwright.sync_api import Locator, Page
 
+from restful_booker.reporting import report_step
+
 
 class AdminNavigation:
     """Authenticated administration navigation and session controls."""
@@ -23,11 +25,13 @@ class AdminNavigation:
             exact=True,
         ).describe(f"Administration navigation link '{name}'")
 
+    @report_step("Log out from administration")
     def logout(self) -> None:
         """End the current administrator session."""
 
         self._logout_button.click()
 
+    @report_step("Open an administration section")
     def open_section(self, name: str) -> None:
         """Follow a link from the administration navigation."""
 

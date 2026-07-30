@@ -92,11 +92,15 @@ Every pytest run replaces `allure-results/` with fresh Allure result files.
 
 ## Allure reports
 
-Tests are organized in Allure by epic, feature, story, readable title, and
-severity. High-level steps describe actions and expected outcomes. API
-lifecycle fixtures include setup and cleanup steps, Python logs are attached to
-results automatically, and failed UI tests include a full-page screenshot.
-The report also records the base URL, operating system, and Python version.
+Tests are organized in two parallel Allure hierarchies:
+`parent suite → suite → sub-suite` for UI/API module navigation and
+`epic → feature → story` for behavior navigation. Test modules own only
+metadata. Reusable page actions, API clients, and assertion objects emit the
+high-level steps, keeping reporting statements out of test bodies. API
+lifecycle fixtures expose their client operations as setup and cleanup steps,
+Python logs are attached automatically, and failed UI tests include a full-page
+screenshot. The report also records the base URL, operating system, and Python
+version.
 
 Install the Allure command-line tool on macOS:
 

@@ -8,6 +8,7 @@ from playwright.sync_api import Page
 
 from restful_booker.core import Settings
 from restful_booker.models import StayPeriod
+from restful_booker.reporting import report_step
 from restful_booker.ui.components import (
     BookingCalendar,
     BookingPanel,
@@ -27,6 +28,7 @@ class ReservationPage:
         self.booking_panel = BookingPanel(page)
         self.room_overview = RoomOverview(page)
 
+    @report_step("Open the selected room for the requested stay")
     def open(self, *, room_id: int, stay: StayPeriod) -> None:
         """Navigate directly to a room with a selected stay period."""
 

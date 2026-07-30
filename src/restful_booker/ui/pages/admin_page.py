@@ -6,6 +6,7 @@ from playwright.sync_api import Locator, Page
 
 from restful_booker.core import Settings
 from restful_booker.models import Credentials
+from restful_booker.reporting import report_step
 from restful_booker.ui.components import AdminNavigation
 
 
@@ -64,6 +65,7 @@ class AdminPage:
 
         return self._report_calendar
 
+    @report_step("Open the administration login page")
     def open(self) -> AdminPage:
         """Navigate to the administration area."""
 
@@ -74,6 +76,7 @@ class AdminPage:
         )
         return self
 
+    @report_step("Open the protected room administration route")
     def open_rooms(self) -> None:
         """Navigate directly to the protected room administration page."""
 
@@ -83,6 +86,7 @@ class AdminPage:
             timeout=self._settings.navigation_timeout_ms,
         )
 
+    @report_step("Submit administrator credentials")
     def login(self, credentials: Credentials) -> None:
         """Submit administrator credentials."""
 

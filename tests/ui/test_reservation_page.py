@@ -8,6 +8,9 @@ from restful_booker.ui.assertions import ReservationAssertions
 from restful_booker.ui.pages import ReservationPage
 
 pytestmark = [
+    allure.parent_suite("Restful Booker Platform"),
+    allure.suite("UI tests"),
+    allure.sub_suite("Room reservation"),
     allure.epic("Web interface"),
     allure.feature("Room reservation"),
 ]
@@ -24,14 +27,12 @@ def test_selected_room_details_are_displayed(
     booking_request: BookingRequest,
     double_room: Room,
 ) -> None:
-    with allure.step("Open the selected room for the requested stay"):
-        reservation_page.open(
-            room_id=double_room.room_id,
-            stay=booking_request.stay,
-        )
+    reservation_page.open(
+        room_id=double_room.room_id,
+        stay=booking_request.stay,
+    )
 
-    with allure.step("Verify the room description, image, and features"):
-        reservation_assertions.room_details_are_displayed(double_room)
+    reservation_assertions.room_details_are_displayed(double_room)
 
 
 @pytest.mark.ui
@@ -45,17 +46,14 @@ def test_price_summary_reflects_selected_stay(
     booking_request: BookingRequest,
     double_room: Room,
 ) -> None:
-    with allure.step("Open the selected room for the requested stay"):
-        reservation_page.open(
-            room_id=double_room.room_id,
-            stay=booking_request.stay,
-        )
-
-    with allure.step("Verify the nightly calculation and final price"):
-        reservation_assertions.price_summary_matches(
-            double_room,
-            booking_request.stay,
-        )
+    reservation_page.open(
+        room_id=double_room.room_id,
+        stay=booking_request.stay,
+    )
+    reservation_assertions.price_summary_matches(
+        double_room,
+        booking_request.stay,
+    )
 
 
 @pytest.mark.ui
@@ -69,18 +67,15 @@ def test_guest_form_reports_required_names(
     booking_request: BookingRequest,
     double_room: Room,
 ) -> None:
-    with allure.step("Open the selected room for the requested stay"):
-        reservation_page.open(
-            room_id=double_room.room_id,
-            stay=booking_request.stay,
-        )
+    reservation_page.open(
+        room_id=double_room.room_id,
+        stay=booking_request.stay,
+    )
 
-    with allure.step("Submit an empty guest-details form"):
-        reservation_page.booking_panel.open_guest_form()
-        reservation_page.booking_panel.submit_empty_guest_form()
+    reservation_page.booking_panel.open_guest_form()
+    reservation_page.booking_panel.submit_empty_guest_form()
 
-    with allure.step("Verify required guest-name validation messages"):
-        reservation_assertions.required_guest_name_errors_are_displayed()
+    reservation_assertions.required_guest_name_errors_are_displayed()
 
 
 @pytest.mark.ui
@@ -94,18 +89,15 @@ def test_user_can_cancel_guest_details_entry(
     booking_request: BookingRequest,
     double_room: Room,
 ) -> None:
-    with allure.step("Open the guest-details form for the selected stay"):
-        reservation_page.open(
-            room_id=double_room.room_id,
-            stay=booking_request.stay,
-        )
-        reservation_page.booking_panel.open_guest_form()
+    reservation_page.open(
+        room_id=double_room.room_id,
+        stay=booking_request.stay,
+    )
+    reservation_page.booking_panel.open_guest_form()
 
-    with allure.step("Cancel guest details entry"):
-        reservation_page.booking_panel.cancel_guest_form()
+    reservation_page.booking_panel.cancel_guest_form()
 
-    with allure.step("Verify that the reservation calendar is restored"):
-        reservation_assertions.guest_entry_is_cancelled()
+    reservation_assertions.guest_entry_is_cancelled()
 
 
 @pytest.mark.ui
@@ -120,15 +112,12 @@ def test_guest_form_reports_invalid_email_and_phone(
     invalid_guest_details: GuestDetails,
     double_room: Room,
 ) -> None:
-    with allure.step("Open the guest-details form for the selected stay"):
-        reservation_page.open(
-            room_id=double_room.room_id,
-            stay=booking_request.stay,
-        )
-        reservation_page.booking_panel.open_guest_form()
+    reservation_page.open(
+        room_id=double_room.room_id,
+        stay=booking_request.stay,
+    )
+    reservation_page.booking_panel.open_guest_form()
 
-    with allure.step("Submit guest details with invalid email and phone"):
-        reservation_page.booking_panel.submit_guest_details(invalid_guest_details)
+    reservation_page.booking_panel.submit_guest_details(invalid_guest_details)
 
-    with allure.step("Verify guest contact validation messages"):
-        reservation_assertions.invalid_guest_contact_details_are_reported()
+    reservation_assertions.invalid_guest_contact_details_are_reported()

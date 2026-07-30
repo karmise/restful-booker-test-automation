@@ -3,6 +3,7 @@
 from playwright.sync_api import Locator, Page
 
 from restful_booker.models import ContactMessage
+from restful_booker.reporting import report_step
 
 
 class ContactForm:
@@ -50,11 +51,13 @@ class ContactForm:
             exact=False,
         ).describe(f"Contact confirmation containing '{text}'")
 
+    @report_step("Submit an empty contact form")
     def submit_empty(self) -> None:
         """Submit the untouched form to trigger required-field validation."""
 
         self._submit_button.click()
 
+    @report_step("Submit a contact message")
     def submit(self, contact_message: ContactMessage) -> None:
         """Fill and submit a valid contact message."""
 

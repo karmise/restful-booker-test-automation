@@ -5,6 +5,7 @@ import re
 from playwright.sync_api import Page, expect
 
 from restful_booker.core import Settings
+from restful_booker.reporting import report_step
 from restful_booker.ui.pages import AdminPage
 
 
@@ -21,6 +22,7 @@ class AdminAssertions:
         self._admin_page = admin_page
         self._settings = settings
 
+    @report_step("Verify that invalid credentials are rejected")
     def invalid_credentials_error_is_displayed(self) -> None:
         """Verify that invalid credentials produce a user-facing error."""
 
@@ -29,6 +31,7 @@ class AdminAssertions:
             "Invalid administrator credentials should show an authentication error",
         ).to_have_text("Invalid credentials")
 
+    @report_step("Verify that the administrator is authenticated")
     def administrator_is_authenticated(self) -> None:
         """Verify the authenticated administrator shell and destination."""
 
@@ -45,6 +48,7 @@ class AdminAssertions:
             "Authenticated navigation should contain the Report link",
         ).to_be_visible()
 
+    @report_step("Verify that the administrator is logged out")
     def administrator_is_logged_out(self) -> None:
         """Verify that logout returns the user to the public page."""
 
@@ -53,6 +57,7 @@ class AdminAssertions:
             "Logging out should return the administrator to the public page",
         ).to_have_url(re.compile(rf"^{re.escape(self._settings.base_url)}/?$"))
 
+    @report_step("Verify that protected administration requires authentication")
     def protected_rooms_require_login(self) -> None:
         """Verify that a logged-out user cannot reopen protected rooms."""
 
@@ -65,6 +70,7 @@ class AdminAssertions:
             "The administrator login form should be visible after redirect",
         ).to_be_visible()
 
+    @report_step("Verify that the booking report is displayed")
     def booking_report_is_open(self) -> None:
         """Verify navigation to the authenticated booking report."""
 

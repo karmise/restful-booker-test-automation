@@ -8,6 +8,9 @@ from restful_booker.ui.assertions import AdminAssertions
 from restful_booker.ui.pages import AdminPage
 
 pytestmark = [
+    allure.parent_suite("Restful Booker Platform"),
+    allure.suite("UI tests"),
+    allure.sub_suite("Administration"),
     allure.epic("Web interface"),
     allure.feature("Administration"),
 ]
@@ -23,14 +26,11 @@ def test_invalid_administrator_credentials_are_rejected(
     admin_assertions: AdminAssertions,
     invalid_admin_credentials: Credentials,
 ) -> None:
-    with allure.step("Open the administration login page"):
-        admin_page.open()
+    admin_page.open()
 
-    with allure.step("Sign in with invalid administrator credentials"):
-        admin_page.login(invalid_admin_credentials)
+    admin_page.login(invalid_admin_credentials)
 
-    with allure.step("Verify that authentication is rejected"):
-        admin_assertions.invalid_credentials_error_is_displayed()
+    admin_assertions.invalid_credentials_error_is_displayed()
 
 
 @pytest.mark.ui
@@ -43,14 +43,11 @@ def test_administrator_can_sign_in(
     admin_assertions: AdminAssertions,
     admin_credentials: Credentials,
 ) -> None:
-    with allure.step("Open the administration login page"):
-        admin_page.open()
+    admin_page.open()
 
-    with allure.step("Sign in with valid administrator credentials"):
-        admin_page.login(admin_credentials)
+    admin_page.login(admin_credentials)
 
-    with allure.step("Verify that the administrator is authenticated"):
-        admin_assertions.administrator_is_authenticated()
+    admin_assertions.administrator_is_authenticated()
 
 
 @pytest.mark.ui
@@ -62,11 +59,9 @@ def test_protected_rooms_redirect_anonymous_user_to_login(
     admin_page: AdminPage,
     admin_assertions: AdminAssertions,
 ) -> None:
-    with allure.step("Open the protected room administration route anonymously"):
-        admin_page.open_rooms()
+    admin_page.open_rooms()
 
-    with allure.step("Verify that authentication is required"):
-        admin_assertions.protected_rooms_require_login()
+    admin_assertions.protected_rooms_require_login()
 
 
 @pytest.mark.ui
@@ -79,16 +74,13 @@ def test_administrator_can_open_booking_report(
     admin_assertions: AdminAssertions,
     admin_credentials: Credentials,
 ) -> None:
-    with allure.step("Authenticate as an administrator"):
-        admin_page.open()
-        admin_page.login(admin_credentials)
-        admin_assertions.administrator_is_authenticated()
+    admin_page.open()
+    admin_page.login(admin_credentials)
+    admin_assertions.administrator_is_authenticated()
 
-    with allure.step("Open the Report section"):
-        admin_page.navigation.open_section("Report")
+    admin_page.navigation.open_section("Report")
 
-    with allure.step("Verify that the booking report is displayed"):
-        admin_assertions.booking_report_is_open()
+    admin_assertions.booking_report_is_open()
 
 
 @pytest.mark.ui
@@ -101,15 +93,12 @@ def test_logout_removes_access_to_administration(
     admin_assertions: AdminAssertions,
     admin_credentials: Credentials,
 ) -> None:
-    with allure.step("Authenticate as an administrator"):
-        admin_page.open()
-        admin_page.login(admin_credentials)
-        admin_assertions.administrator_is_authenticated()
+    admin_page.open()
+    admin_page.login(admin_credentials)
+    admin_assertions.administrator_is_authenticated()
 
-    with allure.step("Log out from administration"):
-        admin_page.navigation.logout()
+    admin_page.navigation.logout()
 
-    with allure.step("Verify that protected administration access was removed"):
-        admin_assertions.administrator_is_logged_out()
-        admin_page.open_rooms()
-        admin_assertions.protected_rooms_require_login()
+    admin_assertions.administrator_is_logged_out()
+    admin_page.open_rooms()
+    admin_assertions.protected_rooms_require_login()

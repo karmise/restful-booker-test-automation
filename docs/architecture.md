@@ -117,12 +117,17 @@ as teardown errors instead of silently leaking test data.
 
 ### Reporting
 
-Allure is integrated at the test orchestration boundary instead of inside page
-objects, components, DTOs, or HTTP transport. Tests own business-level steps and
-behavior metadata; resource fixtures own preparation and cleanup steps. This
-keeps reporting concerns out of lower layers and prevents decorated function
-arguments from exposing passwords, tokens, or complete DTO values as Allure
-parameters.
+Allure metadata stays at the test-module boundary, where tests declare both the
+suite hierarchy (`parent suite → suite → sub-suite`) and behavior hierarchy
+(`epic → feature → story`). Business steps are emitted by reusable page
+actions, API client operations, and assertion objects, so test bodies remain
+free of reporting contexts.
+
+A small reporting adapter wraps those operations with fixed-title context
+steps. Unlike the standard decorated-step API, it does not serialize wrapped
+function arguments. Credentials, tokens, and complete DTO values therefore do
+not become Allure step parameters. DTOs and raw HTTP transport remain unaware
+of reporting.
 
 Every pytest run writes fresh structured results to `allure-results`. API logs
 are captured as attachments, failed UI scenarios attach the final full-page

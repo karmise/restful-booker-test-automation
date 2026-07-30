@@ -2,6 +2,8 @@
 
 from playwright.sync_api import Locator, Page
 
+from restful_booker.reporting import report_step
+
 
 class Header:
     """Navigation shared by public application pages."""
@@ -18,6 +20,7 @@ class Header:
             exact=True,
         ).describe(f"Public navigation link '{name}'")
 
+    @report_step("Open a section from the primary navigation")
     def open_section(self, name: str) -> None:
         """Follow a link from the primary navigation."""
 

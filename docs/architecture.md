@@ -33,6 +33,16 @@ tests/api
                     +-- restful_booker.api.dto
                           |
                           +-- requests.Session
+
+tests/unit
+  |
+  +-- isolated framework contracts
+        |
+        +-- DTO parsing and serialization
+        +-- settings validation
+        +-- JSON Schema diagnostics
+        +-- safe HTTP logging
+        +-- reporting adapter
 ```
 
 Lower layers never import tests or fixtures.
@@ -133,7 +143,8 @@ Every pytest run writes fresh structured results to `allure-results`. API logs
 are captured as attachments, failed UI scenarios attach the final full-page
 screenshot, and a session hook records stable execution environment properties.
 The Allure CLI converts these result files into the ignored `allure-report`
-HTML artifact.
+HTML artifact. CI merges the unit, API, and UI result artifacts into one report
+and publishes it through GitHub Pages after runs on the default branch.
 
 ### Tests
 
@@ -143,3 +154,8 @@ objects and assertion objects directly.
 
 API tests also avoid raw URL construction, untyped dictionaries, direct
 `jsonschema` calls, and assertions embedded in service clients.
+
+Framework unit tests verify deterministic infrastructure behavior without
+opening a browser or calling the public sandbox. This provides fast feedback
+for contract parsing, configuration, schema diagnostics, secret redaction, and
+reporting integration before the slower end-to-end suites run.

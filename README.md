@@ -1,10 +1,17 @@
 # Restful Booker Test Automation Framework
 
+[![Test automation](https://github.com/karmise/restful-booker-test-automation/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/karmise/restful-booker-test-automation/actions/workflows/tests.yml)
+[![Allure report](https://img.shields.io/badge/Allure_report-live-ff4088?logo=qameta)](https://karmise.github.io/restful-booker-test-automation/)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776ab?logo=python&logoColor=white)](https://www.python.org/)
+
 A layered Python test automation framework for the
 [Restful Booker Platform](https://automationintesting.online).
 
-The project contains 30 automated tests: 15 browser scenarios and 15 API
-scenarios covering six external service contracts.
+The project contains 45 automated tests: 15 browser scenarios, 15 API
+scenarios covering six external service contracts, and 15 fast unit tests for
+the framework itself.
+
+**[Open the latest interactive Allure report](https://karmise.github.io/restful-booker-test-automation/)**
 
 ## Architecture
 
@@ -25,6 +32,10 @@ tests/api
       -> service clients
         -> request and response DTOs
           -> requests.Session
+
+tests/unit
+  -> isolated checks for framework contracts
+    -> DTOs, configuration, schema validation, logging, and reporting
 ```
 
 - `core` owns environment configuration.
@@ -39,6 +50,7 @@ tests/api
 - `api/testdata` creates unique API-owned resources.
 - `tests/ui/fixtures` composes UI objects and controls their lifecycle.
 - `tests/api/fixtures` authenticates and guarantees reverse-order cleanup.
+- `tests/unit` verifies framework behavior without a browser or network.
 
 Fixture registration is scoped by test type. API tests never load Playwright
 fixtures, and UI tests do not create HTTP clients.
@@ -77,6 +89,7 @@ overridden. The public sandbox credentials are intentionally non-secret.
 poetry run ruff format --check .
 poetry run ruff check .
 poetry run mypy src tests
+poetry run pytest tests/unit
 poetry run pytest tests/api
 poetry run pytest tests/ui
 ```
@@ -181,9 +194,10 @@ Six Draft 2020-12 schemas validate the external contracts consumed by the UI.
 Lifecycle fixtures create unique rooms, bookings, and messages, then remove
 them in reverse dependency order even after a failed assertion.
 
-GitHub Actions runs quality checks, the API suite, and the Chromium UI suite as
-separate jobs on Python 3.12. Allure results are uploaded after every API and UI
-run. Browser failure artifacts are retained for seven days.
+GitHub Actions runs quality checks, framework unit tests, the API suite, and the
+Chromium UI suite as separate jobs on Python 3.12. Their results are merged into
+one Allure report and published to GitHub Pages after every run on `main`.
+Browser failure artifacts and raw Allure results are retained for seven days.
 
 ## Environment variables
 

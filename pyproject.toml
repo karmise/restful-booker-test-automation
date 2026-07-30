@@ -1,11 +1,16 @@
 [project]
-name = "restful-booker-ui-tests"
+name = "restful-booker-test-automation"
 version = "0.1.0"
-description = "Layered UI test automation framework for Restful Booker Platform"
+description = "Layered UI and API test automation framework for Restful Booker Platform"
 authors = []
 readme = "README.md"
 requires-python = ">=3.11,<4.0"
+keywords = ["allure", "api-testing", "playwright", "pytest", "test-automation"]
 dependencies = []
+
+[project.urls]
+Repository = "https://github.com/karmise/restful-booker-test-automation"
+"Live Allure report" = "https://karmise.github.io/restful-booker-test-automation/"
 
 [tool.poetry]
 package-mode = false
@@ -48,6 +53,7 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 markers = [
     "api: HTTP API tests",
     "ui: browser-based user interface tests",
+    "unit: fast isolated framework tests",
     "smoke: critical happy-path checks",
     "regression: broader functional coverage",
 ]

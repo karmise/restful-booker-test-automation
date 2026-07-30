@@ -79,6 +79,39 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
+  unit:
+    name: Framework unit tests / Python 3.12
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        run: python -m pip install poetry==2.1.4
+
+      - name: Install project dependencies
+        run: poetry install --no-interaction
+
+      - name: Run framework unit tests
+        run: poetry run pytest tests/unit
+
+      - name: Upload unit-test Allure results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-allure-results
+          path: allure-results/
+          if-no-files-found: warn
+          retention-days: 7
+
   chromium:
     name: UI / Chromium / Python 3.12
     needs: quality
@@ -125,3 +158,77 @@ jobs:
           path: artifacts/
           if-no-files-found: ignore
           retention-days: 7
+
+  report:
+    name: Build Allure report
+    needs:
+      - api
+      - chromium
+      - unit
+    if: >-
+      ${{
+        always()
+        && github.ref == 'refs/heads/main'
+        && github.event_name != 'pull_request'
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Download Allure results
+        uses: actions/download-artifact@v8
+        with:
+          pattern: "*-allure-results"
+          path: allure-results
+          merge-multiple: true
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Allure Report CLI
+        env:
+          ALLURE_VERSION: 2.44.1
+        run: |
+          curl --fail --silent --show-error --location \
+            "https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.tgz" \
+            --output "${RUNNER_TEMP}/allure.tgz"
+          tar --extract --gzip --file "${RUNNER_TEMP}/allure.tgz" \
+            --directory "${RUNNER_TEMP}"
+          echo "${RUNNER_TEMP}/allure-${ALLURE_VERSION}/bin" >> "${GITHUB_PATH}"
+
+      - name: Generate combined Allure report
+        run: >-
+          allure generate allure-results
+          --clean
+          --output allure-report
+          --name "Restful Booker Test Automation"
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: allure-report/
+
+  deploy:
+    name: Publish Allure report
+    needs: report
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

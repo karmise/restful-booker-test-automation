@@ -62,9 +62,11 @@ demonstrates a stable responsibility.
 Tests do not import Playwright `expect`. Assertion objects retain Playwright's
 native expected/actual values and call logs while adding business context.
 
-See [Architecture](docs/architecture.md), [UI test plan](docs/ui-test-plan.md),
-and [API test plan](docs/api-test-plan.md). Locator decisions are documented in
-the [locator strategy](docs/locator-strategy.md).
+See [Architecture](docs/architecture.md),
+[testing conventions](docs/testing-conventions.md),
+[UI test plan](docs/ui-test-plan.md), and
+[API test plan](docs/api-test-plan.md). Locator decisions are documented in the
+[locator strategy](docs/locator-strategy.md).
 
 ## Prerequisites
 

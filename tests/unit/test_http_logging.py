@@ -22,6 +22,10 @@ pytestmark = [
     allure.feature("Safe HTTP logging"),
 ]
 
+_JSON_CONTENT_TYPE = "application/json"
+_TEXT_CONTENT_TYPE = "text/plain"
+_TRUNCATION_OVERFLOW = 12
+
 
 def test_request_log_fields_redact_credentials_headers_and_cookies() -> None:
     session = Session()
@@ -52,14 +56,14 @@ def test_request_log_fields_redact_credentials_headers_and_cookies() -> None:
 def test_response_log_fields_redact_nested_json_and_sensitive_headers() -> None:
     response = _response(
         b'{"user":{"token":"secret","name":"Test"},"items":[{"password":"hidden"}]}',
-        content_type="application/json",
+        content_type=_JSON_CONTENT_TYPE,
         headers={"Set-Cookie": "token=secret", "X-Trace": "trace-2"},
     )
 
     headers, body = response_log_fields(response)
 
     assert json.loads(headers) == {
-        "Content-Type": "application/json",
+        "Content-Type": _JSON_CONTENT_TYPE,
         "Set-Cookie": REDACTED,
         "X-Trace": "trace-2",
     }
@@ -70,7 +74,10 @@ def test_response_log_fields_redact_nested_json_and_sensitive_headers() -> None:
 
 
 def test_response_log_fields_fall_back_to_text_for_invalid_json() -> None:
-    response = _response(b"upstream returned invalid JSON", content_type="application/json")
+    response = _response(
+        b"upstream returned invalid JSON",
+        content_type=_JSON_CONTENT_TYPE,
+    )
 
     _, body = response_log_fields(response)
 
@@ -78,11 +85,14 @@ def test_response_log_fields_fall_back_to_text_for_invalid_json() -> None:
 
 
 def test_response_log_fields_truncate_large_text_body() -> None:
-    response = _response(b"x" * (MAX_BODY_CHARACTERS + 12), content_type="text/plain")
+    response = _response(
+        b"x" * (MAX_BODY_CHARACTERS + _TRUNCATION_OVERFLOW),
+        content_type=_TEXT_CONTENT_TYPE,
+    )
 
     _, body = response_log_fields(response)
 
-    assert body == f"{'x' * MAX_BODY_CHARACTERS}... <truncated 12 characters>"
+    assert body == (f"{'x' * MAX_BODY_CHARACTERS}... <truncated {_TRUNCATION_OVERFLOW} characters>")
 
 
 def _response(

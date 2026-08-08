@@ -14,6 +14,7 @@ def isolated_room(created_room: CreatedRoom) -> Room:
     return Room(
         room_id=created_room.room.room_id,
         name=created_room.room.room_name,
+        room_type=created_room.room.room_type,
         nightly_rate=created_room.room.room_price,
         features=created_room.room.features,
     )

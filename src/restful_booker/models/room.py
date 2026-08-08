@@ -9,6 +9,7 @@ class Room:
 
     room_id: int
     name: str
+    room_type: str
     nightly_rate: int
     features: tuple[str, ...]
 

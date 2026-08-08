@@ -9,14 +9,14 @@ class RoomOverview:
     def __init__(self, page: Page) -> None:
         self._page = page
 
-    def heading(self, room_name: str) -> Locator:
+    def heading(self, room_type: str) -> Locator:
         """Locate the primary room heading."""
 
         return self._page.get_by_role(
             "heading",
-            name=f"{room_name} Room",
+            name=f"{room_type} Room",
             exact=True,
-        ).describe(f"Primary heading for '{room_name}' room")
+        ).describe(f"Primary heading for '{room_type}' room type")
 
     @property
     def hero_image(self) -> Locator:

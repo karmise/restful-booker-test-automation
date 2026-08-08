@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass
+from time import monotonic, sleep
 
 import allure
 import pytest
@@ -41,6 +42,14 @@ class CreatedBooking:
 @dataclass(frozen=True, slots=True)
 class CreatedMessage:
     request: MessageRequest
+    message: MessageSummary
+
+
+@dataclass(frozen=True, slots=True)
+class DiscoveredMessage:
+    """A message together with the collection response that exposed it."""
+
+    response: Response
     message: MessageSummary
 
 
@@ -144,17 +153,43 @@ def created_message(
     create_response = message_client.create_message(request)
     _require_status(create_response, 200, resource="message creation")
 
-    collection_response = admin_message_client.get_messages()
-    _require_status(collection_response, 200, resource="message discovery")
-    message = MessageCollection.from_payload(response_json(collection_response)).find_by_subject(
-        request.subject
-    )
+    discovered = wait_for_message(admin_message_client, subject=request.subject)
+    message = discovered.message
     api_resource_lifecycle.track_message(
         subject=request.subject,
         message_id=message.message_id,
     )
 
     return CreatedMessage(request=request, message=message)
+
+
+def wait_for_message(
+    message_client: MessageClient,
+    *,
+    subject: str,
+    timeout_seconds: float = 5.0,
+    poll_interval_seconds: float = 0.25,
+) -> DiscoveredMessage:
+    """Poll the eventually consistent message collection for a unique subject."""
+
+    deadline = monotonic() + timeout_seconds
+    while True:
+        response = message_client.get_messages()
+        _require_status(response, 200, resource="message discovery")
+        collection = MessageCollection.from_payload(response_json(response))
+        matches = tuple(message for message in collection.messages if message.subject == subject)
+        if len(matches) == 1:
+            return DiscoveredMessage(response=response, message=matches[0])
+        if len(matches) > 1:
+            raise LookupError(
+                f"Expected one message with subject '{subject}', found {len(matches)}"
+            )
+        if monotonic() >= deadline:
+            raise LookupError(
+                f"Message with subject '{subject}' did not appear within "
+                f"{timeout_seconds:g} seconds"
+            )
+        sleep(poll_interval_seconds)
 
 
 def _require_status(response: Response, expected: int, *, resource: str) -> None:

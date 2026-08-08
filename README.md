@@ -198,7 +198,10 @@ Six Draft 2020-12 schemas validate the external contracts consumed by the UI.
 Lifecycle fixtures register unique rooms, bookings, and messages before the
 mutation request, then remove them in reverse dependency order even if later
 discovery, contract validation, or the test itself fails. UI data preconditions
-use the same lifecycle without exposing API clients in browser-test bodies.
+use the same lifecycle without exposing API clients in browser-test bodies. The
+home-page catalogue smoke test intentionally uses a stable public seed because
+the application does not render rooms created through the administration API in
+that catalogue; direct reservation scenarios remain isolated with API-created rooms.
 Two strict expected-failure scenarios document known sandbox defects where
 unknown room and message identifiers return `500` instead of `404`.
 

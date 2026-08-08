@@ -37,17 +37,17 @@ class ReservationAssertions:
             )
         )
         expect(
-            self._reservation_page.room_overview.heading(room.name),
-            f"Reservation page should identify the selected '{room.name}' room",
+            self._reservation_page.room_overview.heading(room.room_type),
+            f"Reservation page should show type '{room.room_type}' for selected room '{room.name}'",
         ).to_be_visible()
 
     @report_step("Verify the selected room details")
     def room_details_are_displayed(self, room: Room) -> None:
-        """Verify the primary room information and seeded features."""
+        """Verify the primary room information and configured features."""
 
         expect(
-            self._reservation_page.room_overview.heading(room.name),
-            f"Room heading should identify the '{room.name}' room",
+            self._reservation_page.room_overview.heading(room.room_type),
+            f"Room heading should show type '{room.room_type}' for room '{room.name}'",
         ).to_be_visible()
         expect(
             self._reservation_page.room_overview.hero_image,

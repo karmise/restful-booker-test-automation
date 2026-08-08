@@ -6,7 +6,7 @@ Fifteen UI scenarios running against `https://automationintesting.online`.
 
 ## Home page
 
-1. Display an API-created isolated room and open it by its canonical identifier.
+1. Display a stable public catalogue room and open it by its canonical identifier.
 2. Validate required contact form values.
 3. Navigate to the contact section from the primary navigation.
 4. Validate malformed email and phone values in the contact form.

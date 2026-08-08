@@ -8,6 +8,7 @@ from restful_booker.models import (
     ContactMessage,
     Credentials,
     GuestDetails,
+    Room,
 )
 from restful_booker.testdata import TestDataFactory
 
@@ -17,6 +18,19 @@ def test_data_factory() -> TestDataFactory:
     """Provide the single entry point for generated UI test data."""
 
     return TestDataFactory()
+
+
+@pytest.fixture(scope="session")
+def public_double_room() -> Room:
+    """Describe the stable public room used by the home-page catalogue smoke test."""
+
+    return Room(
+        room_id=2,
+        name="Double",
+        room_type="Double",
+        nightly_rate=150,
+        features=("TV", "Radio", "Safe"),
+    )
 
 
 @pytest.fixture

@@ -32,6 +32,7 @@ from fixtures.ui.data import (
     invalid_admin_credentials,
     invalid_contact_message,
     invalid_guest_details,
+    public_double_room,
     test_data_factory,
 )
 from fixtures.ui.pages import admin_page, home_page, reservation_page
@@ -91,6 +92,7 @@ __all__ = [
     "invalid_contact_message",
     "invalid_guest_details",
     "isolated_room",
+    "public_double_room",
     "public_session",
     "reservation_assertions",
     "reservation_page",

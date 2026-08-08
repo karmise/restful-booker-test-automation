@@ -5,7 +5,7 @@ from http import HTTPStatus
 import allure
 import pytest
 
-from fixtures.api.resources import CreatedMessage
+from fixtures.api.resources import CreatedMessage, wait_for_message
 from restful_booker.api.assertions import ApiAssertions, MessageAssertions
 from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import MessageClient
@@ -47,16 +47,15 @@ def test_guest_can_create_contact_message(
     )
     api_assertions.success_flag_is_true(create_response)
 
-    collection_response = admin_message_client.get_messages()
+    discovered = wait_for_message(admin_message_client, subject=request.subject)
+    collection_response = discovered.response
     api_assertions.has_status(
         collection_response,
         HTTPStatus.OK,
         because="The created message should be discoverable by the administrator",
     )
     api_assertions.matches_schema(collection_response, "messages")
-    message = MessageCollection.from_payload(response_json(collection_response)).find_by_subject(
-        request.subject
-    )
+    message = discovered.message
     api_resource_lifecycle.track_message(
         subject=request.subject,
         message_id=message.message_id,

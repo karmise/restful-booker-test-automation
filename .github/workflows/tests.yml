@@ -5,13 +5,66 @@ on:
     branches:
       - main
   pull_request:
+  schedule:
+    # GitHub schedules use UTC. This runs daily at 08:00 in Bishkek (UTC+6).
+    - cron: "0 2 * * *"
   workflow_dispatch:
+    inputs:
+      suite:
+        description: Test layer to execute
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - api
+          - ui
+      marker:
+        description: Pytest marker selection
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - smoke
+          - regression
+      browser:
+        description: Browser selection for UI tests
+        required: true
+        default: chromium
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+          - all
+      base_url:
+        description: Restful Booker Platform URL
+        required: true
+        default: https://automationintesting.online
+        type: string
+      http_logging:
+        description: Show API request and response logs in the job output
+        required: true
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: "3.12"
+  POETRY_VERSION: "2.1.4"
+  RBP_BASE_URL: >-
+    ${{
+      github.event_name == 'workflow_dispatch'
+      && inputs.base_url
+      || vars.RBP_BASE_URL
+      || 'https://automationintesting.online'
+    }}
 
 permissions:
   contents: read
 
 concurrency:
-  group: tests-${{ github.workflow }}-${{ github.ref }}
+  group: tests-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -24,13 +77,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
+      - name: Install Poetry
+        run: pipx install "poetry==${POETRY_VERSION}"
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
-
-      - name: Install Poetry
-        run: python -m pip install poetry==2.1.4
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
+          cache-dependency-path: poetry.lock
 
       - name: Install project dependencies
         run: poetry install --no-interaction
@@ -44,31 +99,86 @@ jobs:
       - name: Run type checking
         run: poetry run mypy src fixtures tests
 
+  target-health:
+    name: Target environment health
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Wait for Restful Booker Platform
+        shell: bash
+        run: |
+          health_url="${RBP_BASE_URL%/}/api/branding"
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --location \
+            --retry 4 \
+            --retry-delay 5 \
+            --retry-all-errors \
+            --connect-timeout 10 \
+            --max-time 20 \
+            "${health_url}" \
+            > /dev/null
+
   api:
     name: API / Python 3.12
-    needs: quality
+    needs:
+      - quality
+      - target-health
+    if: >-
+      ${{
+        github.event_name != 'workflow_dispatch'
+        || inputs.suite == 'all'
+        || inputs.suite == 'api'
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    env:
+      TEST_MARKER: >-
+        ${{
+          github.event_name == 'pull_request'
+          && 'smoke'
+          || github.event_name == 'workflow_dispatch'
+          && inputs.marker
+          || 'all'
+        }}
+      HTTP_LOGGING: >-
+        ${{ github.event_name == 'workflow_dispatch' && inputs.http_logging || false }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
 
+      - name: Install Poetry
+        run: pipx install "poetry==${POETRY_VERSION}"
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
-
-      - name: Install Poetry
-        run: python -m pip install poetry==2.1.4
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
+          cache-dependency-path: poetry.lock
 
       - name: Install project dependencies
         run: poetry install --no-interaction
 
       - name: Run API tests
-        run: poetry run pytest tests/api
-        env:
-          RBP_BASE_URL: https://automationintesting.online
+        shell: bash
+        run: |
+          pytest_args=(tests/api)
+
+          if [[ "${TEST_MARKER}" != "all" ]]; then
+            pytest_args+=("-m" "${TEST_MARKER}")
+          fi
+
+          if [[ "${HTTP_LOGGING}" == "true" ]]; then
+            pytest_args+=("-o" "log_cli=true" "--log-cli-level=INFO")
+          fi
+
+          poetry run pytest "${pytest_args[@]}"
 
       - name: Upload API Allure results
         if: always()
@@ -89,13 +199,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
+      - name: Install Poetry
+        run: pipx install "poetry==${POETRY_VERSION}"
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
-
-      - name: Install Poetry
-        run: python -m pip install poetry==2.1.4
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
+          cache-dependency-path: poetry.lock
 
       - name: Install project dependencies
         run: poetry install --no-interaction
@@ -112,40 +224,83 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  chromium:
-    name: UI / Chromium / Python 3.12
-    needs: quality
+  ui:
+    name: UI / ${{ matrix.browser }} / Python 3.12
+    needs:
+      - quality
+      - target-health
+    if: >-
+      ${{
+        github.event_name != 'workflow_dispatch'
+        || inputs.suite == 'all'
+        || inputs.suite == 'ui'
+      }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: >-
+          ${{
+            fromJSON(
+              (
+                github.event_name == 'schedule'
+                || github.event_name == 'workflow_dispatch' && inputs.browser == 'all'
+              )
+              && '["chromium", "firefox", "webkit"]'
+              || github.event_name == 'workflow_dispatch'
+              && format('["{0}"]', inputs.browser)
+              || '["chromium"]'
+            )
+          }}
+
+    env:
+      TEST_MARKER: >-
+        ${{
+          github.event_name == 'pull_request'
+          && 'smoke'
+          || github.event_name == 'workflow_dispatch'
+          && inputs.marker
+          || 'all'
+        }}
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
 
+      - name: Install Poetry
+        run: pipx install "poetry==${POETRY_VERSION}"
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
-
-      - name: Install Poetry
-        run: python -m pip install poetry==2.1.4
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
+          cache-dependency-path: poetry.lock
 
       - name: Install project dependencies
         run: poetry install --no-interaction
 
-      - name: Install Chromium
-        run: poetry run playwright install --with-deps chromium
+      - name: Install ${{ matrix.browser }}
+        run: poetry run playwright install --with-deps "${{ matrix.browser }}"
 
       - name: Run UI tests
-        run: poetry run pytest tests/ui
-        env:
-          RBP_BASE_URL: https://automationintesting.online
+        shell: bash
+        run: |
+          pytest_args=(tests/ui "--browser=${{ matrix.browser }}")
+
+          if [[ "${TEST_MARKER}" != "all" ]]; then
+            pytest_args+=("-m" "${TEST_MARKER}")
+          fi
+
+          poetry run pytest "${pytest_args[@]}"
 
       - name: Upload UI Allure results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: ui-allure-results
+          name: ui-${{ matrix.browser }}-allure-results
           path: allure-results/
           if-no-files-found: warn
           retention-days: 7
@@ -154,7 +309,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-failure-artifacts
+          name: playwright-${{ matrix.browser }}-failure-artifacts
           path: artifacts/
           if-no-files-found: ignore
           retention-days: 7
@@ -163,13 +318,20 @@ jobs:
     name: Build Allure report
     needs:
       - api
-      - chromium
+      - target-health
+      - ui
       - unit
     if: >-
       ${{
         always()
         && github.ref == 'refs/heads/main'
-        && github.event_name != 'pull_request'
+        && (github.event_name == 'push' || github.event_name == 'schedule')
+        && needs.target-health.result == 'success'
+        && (
+          needs.api.result != 'skipped'
+          || needs.ui.result != 'skipped'
+          || needs.unit.result != 'skipped'
+        )
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 10

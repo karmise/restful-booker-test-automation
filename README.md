@@ -198,10 +198,31 @@ them in reverse dependency order even after a failed assertion.
 Two strict expected-failure scenarios document known sandbox defects where
 unknown room and message identifiers return `500` instead of `404`.
 
-GitHub Actions runs quality checks, framework unit tests, the API suite, and the
-Chromium UI suite as separate jobs on Python 3.12. Their results are merged into
-one Allure report and published to GitHub Pages after every run on `main`.
-Browser failure artifacts and raw Allure results are retained for seven days.
+## Continuous integration
+
+GitHub Actions uses one event-aware workflow instead of treating every change
+as a full regression run:
+
+| Trigger | Test selection | Browsers | Published report |
+| --- | --- | --- | --- |
+| Pull request | Quality, unit, API smoke, UI smoke | Chromium | Raw Allure artifacts |
+| Push to `main` | Quality, unit, full API, full UI | Chromium | GitHub Pages |
+| Daily schedule | Quality, unit, full API, full UI | Chromium, Firefox, WebKit | GitHub Pages |
+| Manual dispatch | Selected layer and marker | Selected browser or all | Raw Allure artifacts |
+
+The scheduled workflow starts at `02:00 UTC` (`08:00` in Bishkek). A manual
+run can select `api`, `ui`, or both; `smoke`, `regression`, or all scenarios;
+one browser or the complete browser matrix; a target base URL; and optional
+console HTTP logging. Quality and framework unit checks run in every mode. A
+separate health gate verifies the target environment before API and UI jobs,
+so an unavailable public sandbox is distinguishable from a product-test
+failure. Pull requests stay fast while `main` and nightly runs retain complete
+regression coverage.
+
+Every test job uploads independent Allure results. Browser traces, screenshots,
+and other Playwright diagnostics are retained on failure. Artifacts are kept
+for seven days, and trusted automatic runs merge their results into the live
+Allure report on GitHub Pages.
 
 ## Environment variables
 

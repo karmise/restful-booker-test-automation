@@ -5,6 +5,7 @@ from __future__ import annotations
 from playwright.sync_api import Locator, Page
 
 from restful_booker.core import Settings
+from restful_booker.models import Room
 from restful_booker.reporting import report_step
 from restful_booker.ui.components import ContactForm, Header
 
@@ -37,21 +38,22 @@ class HomePage:
         )
         return self
 
-    def room_card(self, room_name: str) -> Locator:
-        """Locate a seeded room card by its user-visible name."""
+    def room_card(self, room: Room) -> Locator:
+        """Locate a test-owned room card by its name and canonical URL."""
 
+        room_link = self._rooms.locator(f'a[href="/reservation/{room.room_id}"]')
         return (
             self._rooms.locator(".room-card")
-            .filter(has_text=room_name)
-            .describe(f"Room card for '{room_name}'")
+            .filter(has=room_link, has_text=room.name)
+            .describe(f"Room card for '{room.name}' (id={room.room_id})")
         )
 
     @report_step("Open the selected room")
-    def open_room(self, room_name: str) -> None:
-        """Open the reservation page from a named room card."""
+    def open_room(self, room: Room) -> None:
+        """Open the reservation page from the test-owned room card."""
 
-        self.room_card(room_name).get_by_role(
+        self.room_card(room).get_by_role(
             "link",
             name="Book now",
             exact=True,
-        ).describe(f"Book now link for '{room_name}'").click()
+        ).describe(f"Book now link for '{room.name}'").click()

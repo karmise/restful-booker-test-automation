@@ -121,14 +121,20 @@ properties. A cached registry reports every violation with its JSON path.
 
 Compose settings, models, pages, and Playwright lifecycle objects. Fixture
 modules form a separate root layer split by responsibility under `fixtures/ui`
-and `fixtures/api`. The suite-local `conftest.py` files only register the
-appropriate branch, preventing API tests from loading Playwright-specific
-fixtures.
+and `fixtures/api`. The API suite registers only its own branch, preventing it
+from loading Playwright-specific fixtures. The UI suite additionally registers
+the narrow API resource fixtures required for data setup and cleanup.
 
 API resource fixtures own mutation prerequisites and cleanup. A booking fixture
-depends on a created room fixture, so pytest automatically deletes the booking
-before deleting its room. Cleanup status is validated and failures are reported
-as teardown errors instead of silently leaking test data.
+depends on a created room fixture. Both register their unique identities with a
+shared lifecycle before mutation, so cleanup can rediscover a
+resource even if setup fails before its identifier is parsed. The lifecycle
+deletes resources in reverse creation order and reports aggregated cleanup
+failures instead of abandoning the remaining resources.
+
+UI resource fixtures use the same API lifecycle only for setup and teardown.
+Browser-test bodies remain UI-only while rooms and successful contact messages
+stay isolated from the shared public seed state.
 
 ### Reporting
 

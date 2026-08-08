@@ -19,20 +19,20 @@ pytestmark = [
 @pytest.mark.ui
 @pytest.mark.smoke
 @allure.story("Room discovery")
-@allure.title("User can open a seeded room")
+@allure.title("User can open an isolated room")
 @allure.severity(allure.severity_level.CRITICAL)
-def test_user_opens_a_seeded_room(
+def test_user_opens_an_isolated_room(
     home_page: HomePage,
     home_assertions: HomeAssertions,
     reservation_assertions: ReservationAssertions,
-    double_room: Room,
+    isolated_room: Room,
 ) -> None:
     home_page.open()
 
-    home_assertions.room_is_available(double_room)
-    home_page.open_room(double_room.name)
+    home_assertions.room_is_available(isolated_room)
+    home_page.open_room(isolated_room)
 
-    reservation_assertions.selected_room_is_open(double_room)
+    reservation_assertions.selected_room_is_open(isolated_room)
 
 
 @pytest.mark.ui

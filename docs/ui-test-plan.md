@@ -6,7 +6,7 @@ Fifteen UI scenarios running against `https://automationintesting.online`.
 
 ## Home page
 
-1. Display seeded rooms and open the selected room.
+1. Display an API-created isolated room and open it by its canonical identifier.
 2. Validate required contact form values.
 3. Navigate to the contact section from the primary navigation.
 4. Validate malformed email and phone values in the contact form.
@@ -30,10 +30,11 @@ Fifteen UI scenarios running against `https://automationintesting.online`.
 
 ## Out of scope
 
-- API tests and API clients
+- API contract assertions inside UI scenarios
 - destructive administration scenarios
-- cross-browser matrix
 - visual regression testing
 - mobile viewport testing
 
-These items may be added after the 15 Chromium scenarios are stable.
+API clients are allowed only in UI fixtures for controlled setup and teardown.
+The browser-test bodies remain UI-only. Visual and mobile coverage may be added
+after the functional scenarios remain stable across the CI browser matrix.

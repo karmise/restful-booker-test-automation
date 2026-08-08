@@ -7,8 +7,8 @@
 A layered Python test automation framework for the
 [Restful Booker Platform](https://automationintesting.online).
 
-The project contains 56 automated tests: 15 browser scenarios, 26 API
-scenarios covering six external service contracts, and 15 fast unit tests for
+The project contains 60 automated tests: 15 browser scenarios, 26 API
+scenarios covering six external service contracts, and 19 fast unit tests for
 the framework itself.
 
 **[Open the latest interactive Allure report](https://karmise.github.io/restful-booker-test-automation/)**
@@ -48,12 +48,14 @@ tests/unit
 - `api/schemas` contains Draft 2020-12 JSON Schemas.
 - `api/assertions` separates protocol, contract, and business checks.
 - `api/testdata` creates unique API-owned resources.
-- `fixtures/ui` composes UI objects and controls their lifecycle.
-- `fixtures/api` authenticates and guarantees reverse-order resource cleanup.
+- `api/resource_lifecycle` guarantees reverse-order cleanup after partial failures.
+- `fixtures/ui` composes UI objects and API-backed test-data preconditions.
+- `fixtures/api` authenticates and registers test-owned resource cleanup.
 - `tests/unit` verifies framework behavior without a browser or network.
 
 Fixture registration is scoped by test type. API tests never load Playwright
-fixtures, and UI tests do not create HTTP clients.
+fixtures. UI test bodies remain browser-only; API clients are used only by
+fixtures to create and remove isolated preconditions.
 
 The project deliberately has no generic `helpers` module or inheritance-heavy
 base page. Shared abstractions will be introduced only when real duplication
@@ -112,8 +114,8 @@ Tests are organized in two parallel Allure hierarchies:
 `epic → feature → story` for behavior navigation. Test modules own only
 metadata. Reusable page actions, API clients, and assertion objects emit the
 high-level steps, keeping reporting statements out of test bodies. API
-lifecycle fixtures expose their client operations as setup and cleanup steps,
-Python logs are attached automatically, and failed UI tests include a full-page
+lifecycle operations appear as setup and cleanup steps, Python logs are
+attached automatically, and failed UI tests include a full-page
 screenshot. The report also records the base URL, operating system, and Python
 version.
 
@@ -193,8 +195,10 @@ tests under `artifacts/`.
 | Report | Empty room availability and a booked unavailable period |
 
 Six Draft 2020-12 schemas validate the external contracts consumed by the UI.
-Lifecycle fixtures create unique rooms, bookings, and messages, then remove
-them in reverse dependency order even after a failed assertion.
+Lifecycle fixtures register unique rooms, bookings, and messages before the
+mutation request, then remove them in reverse dependency order even if later
+discovery, contract validation, or the test itself fails. UI data preconditions
+use the same lifecycle without exposing API clients in browser-test bodies.
 Two strict expected-failure scenarios document known sandbox defects where
 unknown room and message identifiers return `500` instead of `404`.
 
@@ -239,5 +243,5 @@ remains configured to deploy with GitHub Actions.
 | `RBP_API_TIMEOUT_S` | `15` |
 
 The public environment is shared and periodically reset. Tests therefore use
-isolated browser contexts and unique generated data. API cleanup deletes only
-resources created by the current test.
+isolated browser contexts and unique generated data. API-backed cleanup deletes
+only resources registered by the current API or UI test.

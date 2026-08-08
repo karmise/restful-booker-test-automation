@@ -9,7 +9,8 @@ from fixtures.api.resources import CreatedBooking, CreatedRoom
 from restful_booker.api.assertions import ApiAssertions, BookingAssertions
 from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import BookingClient
-from restful_booker.api.dto import BookingResponse
+from restful_booker.api.dto import BookingCollection, BookingResponse
+from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
 from restful_booker.api.testdata import ApiTestDataFactory
 
 pytestmark = [
@@ -27,25 +28,47 @@ pytestmark = [
 @allure.title("Guest can create a booking for an isolated room")
 @allure.severity(allure.severity_level.CRITICAL)
 def test_guest_can_create_booking_for_isolated_room(
-    created_booking: CreatedBooking,
+    booking_client: BookingClient,
+    admin_booking_client: BookingClient,
+    created_room: CreatedRoom,
+    api_test_data_factory: ApiTestDataFactory,
+    api_resource_lifecycle: ApiResourceLifecycle,
     api_assertions: ApiAssertions,
     booking_assertions: BookingAssertions,
 ) -> None:
+    request = api_test_data_factory.booking_request(room_id=created_room.room.room_id)
+
+    api_resource_lifecycle.track_booking(
+        room_id=request.room_id,
+        first_name=request.first_name,
+        last_name=request.last_name,
+    )
+    create_response = booking_client.create_booking(request)
+
     api_assertions.has_status(
-        created_booking.create_response,
+        create_response,
         HTTPStatus.CREATED,
         because="A guest should be able to book an available room",
     )
+
+    collection_response = admin_booking_client.get_bookings_for_room(request.room_id)
     api_assertions.has_status(
-        created_booking.collection_response,
+        collection_response,
         HTTPStatus.OK,
         because="The created booking should be discoverable by the administrator",
     )
-    api_assertions.matches_schema(created_booking.collection_response, "bookings")
-    booking_assertions.created_booking_matches(
-        created_booking.booking,
-        created_booking.request,
+    api_assertions.matches_schema(collection_response, "bookings")
+    booking = BookingCollection.from_payload(response_json(collection_response)).find_by_guest(
+        first_name=request.first_name,
+        last_name=request.last_name,
     )
+    api_resource_lifecycle.track_booking(
+        room_id=request.room_id,
+        first_name=request.first_name,
+        last_name=request.last_name,
+        booking_id=booking.booking_id,
+    )
+    booking_assertions.created_booking_matches(booking, request)
 
 
 @pytest.mark.api

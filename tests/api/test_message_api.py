@@ -10,6 +10,8 @@ from restful_booker.api.assertions import ApiAssertions, MessageAssertions
 from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import MessageClient
 from restful_booker.api.dto import MessageCollection, MessageRequest
+from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
+from restful_booker.api.testdata import ApiTestDataFactory
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -26,21 +28,40 @@ pytestmark = [
 @allure.title("Guest can create a contact message")
 @allure.severity(allure.severity_level.CRITICAL)
 def test_guest_can_create_contact_message(
-    created_message: CreatedMessage,
+    message_client: MessageClient,
+    admin_message_client: MessageClient,
+    api_test_data_factory: ApiTestDataFactory,
+    api_resource_lifecycle: ApiResourceLifecycle,
     api_assertions: ApiAssertions,
     message_assertions: MessageAssertions,
 ) -> None:
+    request = api_test_data_factory.message_request()
+
+    api_resource_lifecycle.track_message(subject=request.subject)
+    create_response = message_client.create_message(request)
+
     api_assertions.has_status(
-        created_message.create_response,
+        create_response,
         HTTPStatus.OK,
         because="A valid public contact message should be accepted",
     )
-    api_assertions.success_flag_is_true(created_message.create_response)
-    api_assertions.matches_schema(created_message.collection_response, "messages")
-    message_assertions.created_message_matches(
-        created_message.message,
-        created_message.request,
+    api_assertions.success_flag_is_true(create_response)
+
+    collection_response = admin_message_client.get_messages()
+    api_assertions.has_status(
+        collection_response,
+        HTTPStatus.OK,
+        because="The created message should be discoverable by the administrator",
     )
+    api_assertions.matches_schema(collection_response, "messages")
+    message = MessageCollection.from_payload(response_json(collection_response)).find_by_subject(
+        request.subject
+    )
+    api_resource_lifecycle.track_message(
+        subject=request.subject,
+        message_id=message.message_id,
+    )
+    message_assertions.created_message_matches(message, request)
 
 
 @pytest.mark.api
@@ -126,11 +147,11 @@ def test_administrator_can_mark_contact_message_as_read(
 @allure.title("Unknown message identifier returns not found")
 @allure.severity(allure.severity_level.NORMAL)
 def test_unknown_message_identifier_returns_not_found(
-    message_client: MessageClient,
+    admin_message_client: MessageClient,
     api_assertions: ApiAssertions,
     missing_resource_id: int,
 ) -> None:
-    response = message_client.get_message(missing_resource_id)
+    response = admin_message_client.get_message(missing_resource_id)
 
     api_assertions.has_status(
         response,

@@ -8,7 +8,6 @@ from restful_booker.models import (
     ContactMessage,
     Credentials,
     GuestDetails,
-    Room,
 )
 from restful_booker.testdata import TestDataFactory
 
@@ -21,8 +20,8 @@ def test_data_factory() -> TestDataFactory:
 
 
 @pytest.fixture
-def contact_message(test_data_factory: TestDataFactory) -> ContactMessage:
-    """Create a unique valid contact message."""
+def contact_message_data(test_data_factory: TestDataFactory) -> ContactMessage:
+    """Create unique valid contact data before lifecycle registration."""
 
     return test_data_factory.contact_message()
 
@@ -65,16 +64,4 @@ def invalid_admin_credentials() -> Credentials:
     return Credentials(
         username="invalid-portfolio-user",
         password="invalid-password",
-    )
-
-
-@pytest.fixture(scope="session")
-def double_room() -> Room:
-    """Describe the stable seeded double room used by UI scenarios."""
-
-    return Room(
-        room_id=2,
-        name="Double",
-        nightly_rate=150,
-        features=("TV", "Radio", "Safe"),
     )

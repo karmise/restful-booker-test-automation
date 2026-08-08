@@ -58,9 +58,10 @@ schema-valid but incorrect response still fails.
 
 ## Resource lifecycle
 
-Mutating tests create uniquely named rooms, bookings, and messages. Function
-fixtures discover the persisted resource identifier and register authenticated
-cleanup. Pytest unwinds dependent fixtures in reverse order:
+Mutating tests create uniquely named rooms, bookings, and messages. The resource
+lifecycle records a unique identity before each request, then stores
+the identifier after discovery. If discovery or DTO parsing fails, cleanup can
+still rediscover the resource. Resources are removed in reverse creation order:
 
 ```text
 create room
@@ -70,8 +71,10 @@ create room
 -> delete room
 ```
 
-Only resources created by the current test are deleted. Tests do not depend on
-execution order or shared seeded identifiers.
+Only resources registered by the current test are deleted. API create scenarios
+perform the mutation explicitly in the test body; fixtures use the same
+lifecycle when creation is only a prerequisite. Tests do not depend on execution
+order or shared seeded identifiers.
 
 ## Known defects
 

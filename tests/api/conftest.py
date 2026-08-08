@@ -34,6 +34,7 @@ from fixtures.api.data import (
     valid_api_credentials,
 )
 from fixtures.api.resources import (
+    api_resource_lifecycle,
     created_booking,
     created_message,
     created_room,
@@ -44,6 +45,7 @@ __all__ = [
     "admin_message_client",
     "admin_room_client",
     "api_assertions",
+    "api_resource_lifecycle",
     "api_test_data_factory",
     "auth_assertions",
     "auth_client",

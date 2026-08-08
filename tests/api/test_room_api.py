@@ -10,6 +10,7 @@ from restful_booker.api.assertions import ApiAssertions, RoomAssertions
 from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import RoomClient
 from restful_booker.api.dto import RoomCollection, RoomRequest, RoomResponse
+from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -45,18 +46,38 @@ def test_room_collection_matches_public_contract(
 @allure.title("Administrator can create an isolated room")
 @allure.severity(allure.severity_level.CRITICAL)
 def test_administrator_can_create_isolated_room(
-    created_room: CreatedRoom,
+    admin_room_client: RoomClient,
+    room_client: RoomClient,
+    room_request: RoomRequest,
+    api_resource_lifecycle: ApiResourceLifecycle,
     api_assertions: ApiAssertions,
     room_assertions: RoomAssertions,
 ) -> None:
+    api_resource_lifecycle.track_room(room_name=room_request.room_name)
+    create_response = admin_room_client.create_room(room_request)
+
     api_assertions.has_status(
-        created_room.create_response,
+        create_response,
         HTTPStatus.OK,
         because="An authenticated administrator should be able to create a room",
     )
-    api_assertions.success_flag_is_true(created_room.create_response)
-    api_assertions.matches_schema(created_room.collection_response, "rooms")
-    room_assertions.created_room_matches(created_room.room, created_room.request)
+    api_assertions.success_flag_is_true(create_response)
+
+    collection_response = room_client.get_rooms()
+    api_assertions.has_status(
+        collection_response,
+        HTTPStatus.OK,
+        because="The created room should be discoverable in the public collection",
+    )
+    api_assertions.matches_schema(collection_response, "rooms")
+    room = RoomCollection.from_payload(response_json(collection_response)).find_by_name(
+        room_request.room_name
+    )
+    api_resource_lifecycle.track_room(
+        room_name=room_request.room_name,
+        room_id=room.room_id,
+    )
+    room_assertions.created_room_matches(room, room_request)
 
 
 @pytest.mark.api

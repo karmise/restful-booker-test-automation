@@ -1,11 +1,11 @@
-"""Seeded room models used by UI scenarios."""
+"""Room models used by UI scenarios."""
 
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
 class Room:
-    """Stable public information for a seeded room."""
+    """Public room information required by UI assertions."""
 
     room_id: int
     name: str

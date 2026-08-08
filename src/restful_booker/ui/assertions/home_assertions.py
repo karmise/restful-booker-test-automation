@@ -31,13 +31,13 @@ class HomeAssertions:
         self._home_page = home_page
         self._settings = settings
 
-    @report_step("Verify that the seeded room is available")
+    @report_step("Verify that the isolated room is available")
     def room_is_available(self, room: Room) -> None:
-        """Verify that a seeded room is displayed on the home page."""
+        """Verify that the test-owned room is displayed on the home page."""
 
         expect(
-            self._home_page.room_card(room.name),
-            f"Seeded room '{room.name}' should be available on the home page",
+            self._home_page.room_card(room),
+            f"Isolated room '{room.name}' should be available on the home page",
         ).to_be_visible()
 
     @report_step("Verify required contact-field validation messages")

@@ -22,31 +22,46 @@ from restful_booker.api.dto import (
     RoomRequest,
     RoomResponse,
 )
+from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
 from restful_booker.api.testdata import ApiTestDataFactory
 
 
 @dataclass(frozen=True, slots=True)
 class CreatedRoom:
     request: RoomRequest
-    create_response: Response
-    collection_response: Response
     room: RoomResponse
 
 
 @dataclass(frozen=True, slots=True)
 class CreatedBooking:
     request: BookingRequest
-    create_response: Response
-    collection_response: Response
     booking: BookingResponse
 
 
 @dataclass(frozen=True, slots=True)
 class CreatedMessage:
     request: MessageRequest
-    create_response: Response
-    collection_response: Response
     message: MessageSummary
+
+
+@pytest.fixture
+@allure.title("Manage test-owned API resources")
+def api_resource_lifecycle(
+    room_client: RoomClient,
+    admin_room_client: RoomClient,
+    admin_booking_client: BookingClient,
+    admin_message_client: MessageClient,
+) -> Iterator[ApiResourceLifecycle]:
+    """Clean up every resource registered by the current test."""
+
+    lifecycle = ApiResourceLifecycle(
+        room_client=room_client,
+        admin_room_client=admin_room_client,
+        admin_booking_client=admin_booking_client,
+        admin_message_client=admin_message_client,
+    )
+    yield lifecycle
+    lifecycle.cleanup()
 
 
 @pytest.fixture
@@ -55,9 +70,11 @@ def created_room(
     admin_room_client: RoomClient,
     room_client: RoomClient,
     room_request: RoomRequest,
-) -> Iterator[CreatedRoom]:
+    api_resource_lifecycle: ApiResourceLifecycle,
+) -> CreatedRoom:
     """Create a unique room and always remove it after dependent resources."""
 
+    api_resource_lifecycle.track_room(room_name=room_request.room_name)
     create_response = admin_room_client.create_room(room_request)
     _require_status(create_response, 200, resource="room creation")
 
@@ -66,17 +83,12 @@ def created_room(
     room = RoomCollection.from_payload(response_json(collection_response)).find_by_name(
         room_request.room_name
     )
+    api_resource_lifecycle.track_room(
+        room_name=room_request.room_name,
+        room_id=room.room_id,
+    )
 
-    try:
-        yield CreatedRoom(
-            request=room_request,
-            create_response=create_response,
-            collection_response=collection_response,
-            room=room,
-        )
-    finally:
-        delete_response = admin_room_client.delete_room(room.room_id)
-        _require_status(delete_response, 202, resource=f"room {room.room_id} cleanup")
+    return CreatedRoom(request=room_request, room=room)
 
 
 @pytest.fixture
@@ -86,11 +98,17 @@ def created_booking(
     admin_booking_client: BookingClient,
     created_room: CreatedRoom,
     api_test_data_factory: ApiTestDataFactory,
-) -> Iterator[CreatedBooking]:
+    api_resource_lifecycle: ApiResourceLifecycle,
+) -> CreatedBooking:
     """Create a booking for the test room and delete it before room cleanup."""
 
     request = api_test_data_factory.booking_request(
         room_id=created_room.room.room_id,
+    )
+    api_resource_lifecycle.track_booking(
+        room_id=request.room_id,
+        first_name=request.first_name,
+        last_name=request.last_name,
     )
     create_response = booking_client.create_booking(request)
     _require_status(create_response, 201, resource="booking creation")
@@ -101,21 +119,14 @@ def created_booking(
         first_name=request.first_name,
         last_name=request.last_name,
     )
+    api_resource_lifecycle.track_booking(
+        room_id=request.room_id,
+        first_name=request.first_name,
+        last_name=request.last_name,
+        booking_id=booking.booking_id,
+    )
 
-    try:
-        yield CreatedBooking(
-            request=request,
-            create_response=create_response,
-            collection_response=collection_response,
-            booking=booking,
-        )
-    finally:
-        delete_response = admin_booking_client.delete_booking(booking.booking_id)
-        _require_status(
-            delete_response,
-            202,
-            resource=f"booking {booking.booking_id} cleanup",
-        )
+    return CreatedBooking(request=request, booking=booking)
 
 
 @pytest.fixture
@@ -124,33 +135,26 @@ def created_message(
     message_client: MessageClient,
     admin_message_client: MessageClient,
     api_test_data_factory: ApiTestDataFactory,
-) -> Iterator[CreatedMessage]:
+    api_resource_lifecycle: ApiResourceLifecycle,
+) -> CreatedMessage:
     """Create a unique contact message and always delete it."""
 
     request = api_test_data_factory.message_request()
+    api_resource_lifecycle.track_message(subject=request.subject)
     create_response = message_client.create_message(request)
     _require_status(create_response, 200, resource="message creation")
 
-    collection_response = message_client.get_messages()
+    collection_response = admin_message_client.get_messages()
     _require_status(collection_response, 200, resource="message discovery")
     message = MessageCollection.from_payload(response_json(collection_response)).find_by_subject(
         request.subject
     )
+    api_resource_lifecycle.track_message(
+        subject=request.subject,
+        message_id=message.message_id,
+    )
 
-    try:
-        yield CreatedMessage(
-            request=request,
-            create_response=create_response,
-            collection_response=collection_response,
-            message=message,
-        )
-    finally:
-        delete_response = admin_message_client.delete_message(message.message_id)
-        _require_status(
-            delete_response,
-            202,
-            resource=f"message {message.message_id} cleanup",
-        )
+    return CreatedMessage(request=request, message=message)
 
 
 def _require_status(response: Response, expected: int, *, resource: str) -> None:

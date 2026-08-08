@@ -41,7 +41,10 @@ class HomePage:
     def room_card(self, room: Room) -> Locator:
         """Locate a test-owned room card by its name and canonical URL."""
 
-        room_link = self._rooms.locator(f'a[href="/reservation/{room.room_id}"]')
+        reservation_path = f"/reservation/{room.room_id}"
+        room_link = self._page.locator(
+            f'a[href="{reservation_path}"], a[href^="{reservation_path}?"]'
+        )
         return (
             self._rooms.locator(".room-card")
             .filter(has=room_link, has_text=room.name)

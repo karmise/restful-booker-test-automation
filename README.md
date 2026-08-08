@@ -206,8 +206,8 @@ as a full regression run:
 | Trigger | Test selection | Browsers | Published report |
 | --- | --- | --- | --- |
 | Pull request | Quality, unit, API smoke, UI smoke | Chromium | Raw Allure artifacts |
-| Push to `main` | Quality, unit, full API, full UI | Chromium | GitHub Pages |
-| Daily schedule | Quality, unit, full API, full UI | Chromium, Firefox, WebKit | GitHub Pages |
+| Push to `main` | Quality, unit, full API, full UI | Chromium | Pages + Allure history |
+| Daily schedule | Quality, unit, full API, full UI | Chromium, Firefox, WebKit | Pages + Allure history |
 | Manual dispatch | Selected layer and marker | Selected browser or all | Raw Allure artifacts |
 
 The scheduled workflow starts at `02:00 UTC` (`08:00` in Bishkek). A manual
@@ -220,9 +220,12 @@ failure. Pull requests stay fast while `main` and nightly runs retain complete
 regression coverage.
 
 Every test job uploads independent Allure results. Browser traces, screenshots,
-and other Playwright diagnostics are retained on failure. Artifacts are kept
-for seven days, and trusted automatic runs merge their results into the live
-Allure report on GitHub Pages.
+and other Playwright diagnostics are retained on failure. Raw artifacts are
+kept for 30 days. Trusted automatic runs restore Allure history, merge their
+results into the live report, and retain the latest 20 complete reports.
+Previous launches open from the report's `Trends` widgets. The automatically
+managed `allure-history` branch stores the generated reports; GitHub Pages
+remains configured to deploy with GitHub Actions.
 
 ## Environment variables
 

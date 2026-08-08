@@ -65,7 +65,7 @@ permissions:
 
 concurrency:
   group: tests-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   quality:
@@ -187,7 +187,8 @@ jobs:
           name: api-allure-results
           path: allure-results/
           if-no-files-found: warn
-          retention-days: 7
+          overwrite: true
+          retention-days: 30
 
   unit:
     name: Framework unit tests / Python 3.12
@@ -222,7 +223,8 @@ jobs:
           name: unit-allure-results
           path: allure-results/
           if-no-files-found: warn
-          retention-days: 7
+          overwrite: true
+          retention-days: 30
 
   ui:
     name: UI / ${{ matrix.browser }} / Python 3.12
@@ -303,19 +305,20 @@ jobs:
           name: ui-${{ matrix.browser }}-allure-results
           path: allure-results/
           if-no-files-found: warn
-          retention-days: 7
+          overwrite: true
+          retention-days: 30
 
       - name: Upload failure artifacts
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-${{ matrix.browser }}-failure-artifacts
+          name: playwright-${{ matrix.browser }}-failure-artifacts-${{ github.run_attempt }}
           path: artifacts/
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 30
 
-  report:
-    name: Build Allure report
+  publish:
+    name: Build and publish Allure report
     needs:
       - api
       - target-health
@@ -324,6 +327,7 @@ jobs:
     if: >-
       ${{
         always()
+        && !cancelled()
         && github.ref == 'refs/heads/main'
         && (github.event_name == 'push' || github.event_name == 'schedule')
         && needs.target-health.result == 'success'
@@ -334,7 +338,20 @@ jobs:
         )
       }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+
+    concurrency:
+      group: allure-pages-${{ github.repository }}
+      cancel-in-progress: false
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Download Allure results
@@ -344,53 +361,46 @@ jobs:
           path: allure-results
           merge-multiple: true
 
-      - name: Set up Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Install Allure Report CLI
-        env:
-          ALLURE_VERSION: 2.44.1
-        run: |
-          curl --fail --silent --show-error --location \
-            "https://github.com/allure-framework/allure2/releases/download/${ALLURE_VERSION}/allure-${ALLURE_VERSION}.tgz" \
-            --output "${RUNNER_TEMP}/allure.tgz"
-          tar --extract --gzip --file "${RUNNER_TEMP}/allure.tgz" \
-            --directory "${RUNNER_TEMP}"
-          echo "${RUNNER_TEMP}/allure-${ALLURE_VERSION}/bin" >> "${GITHUB_PATH}"
-
-      - name: Generate combined Allure report
-        run: >-
-          allure generate allure-results
-          --clean
-          --output allure-report
-          --name "Restful Booker Test Automation"
-
       - name: Configure GitHub Pages
+        id: pages
         uses: actions/configure-pages@v6
+
+      - name: Restore Allure history
+        uses: actions/checkout@v6
+        continue-on-error: true
+        with:
+          ref: allure-history
+          path: allure-history-state
+
+      - name: Build Allure report with history
+        uses: simple-elf/allure-report-action@385367cde61ac68c2568a117f7579f7f148dc459 # v1.15
+        with:
+          allure_results: allure-results
+          allure_report: allure-report
+          gh_pages: allure-history-state
+          allure_history: allure-history
+          keep_reports: "20"
+          report_name: Restful Booker Test Automation
+          report_url: ${{ steps.pages.outputs.base_url }}
+
+      - name: Save Allure history
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: allure-history
+          publish_dir: allure-history
+          keep_files: false
+          force_orphan: true
+          full_commit_message: "ci(allure): publish run #${{ github.run_number }}.${{ github.run_attempt }}"
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: allure-report/
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+          path: allure-history/
 
-  deploy:
-    name: Publish Allure report
-    needs: report
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}

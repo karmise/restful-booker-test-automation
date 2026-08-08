@@ -16,6 +16,8 @@ venv/
 # Test artifacts
 allure-results/
 allure-report/
+allure-history/
+allure-history-state/
 artifacts/
 playwright-report/
 test-results/
@@ -28,4 +30,3 @@ test-results/
 # Codex working directories
 outputs/
 work/
-

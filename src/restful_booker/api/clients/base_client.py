@@ -21,7 +21,7 @@ class BaseApiClient:
         session: Session,
         *,
         base_url: str,
-        timeout_s: int,
+        timeout_s: int | tuple[int, int],
     ) -> None:
         self._session = session
         self._api_url = f"{base_url.rstrip('/')}/api"

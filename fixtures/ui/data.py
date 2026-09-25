@@ -2,6 +2,7 @@
 
 import pytest
 
+from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
 from restful_booker.core import Settings
 from restful_booker.models import (
     BookingRequest,
@@ -41,10 +42,15 @@ def contact_message_data(test_data_factory: TestDataFactory) -> ContactMessage:
 
 
 @pytest.fixture
-def invalid_contact_message(test_data_factory: TestDataFactory) -> ContactMessage:
+def invalid_contact_message(
+    test_data_factory: TestDataFactory,
+    api_resource_lifecycle: ApiResourceLifecycle,
+) -> ContactMessage:
     """Create a complete message that isolates contact-detail validation."""
 
-    return test_data_factory.invalid_contact_message()
+    message = test_data_factory.invalid_contact_message()
+    api_resource_lifecycle.track_message(subject=message.subject)
+    return message
 
 
 @pytest.fixture
@@ -55,10 +61,20 @@ def booking_request(test_data_factory: TestDataFactory) -> BookingRequest:
 
 
 @pytest.fixture
-def invalid_guest_details(test_data_factory: TestDataFactory) -> GuestDetails:
+def invalid_guest_details(
+    test_data_factory: TestDataFactory,
+    isolated_room: Room,
+    api_resource_lifecycle: ApiResourceLifecycle,
+) -> GuestDetails:
     """Create complete guest details with invalid email and phone values."""
 
-    return test_data_factory.invalid_guest_details()
+    guest = test_data_factory.invalid_guest_details()
+    api_resource_lifecycle.track_booking(
+        room_id=isolated_room.room_id,
+        first_name=guest.first_name,
+        last_name=guest.last_name,
+    )
+    return guest
 
 
 @pytest.fixture(scope="session")

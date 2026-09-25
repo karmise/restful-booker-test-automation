@@ -11,6 +11,7 @@ from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import RoomClient
 from restful_booker.api.dto import RoomCollection, RoomRequest, RoomResponse
 from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
+from tests.api.known_defects import KnownSandboxDefectError
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -89,7 +90,9 @@ def test_anonymous_user_cannot_create_room(
     room_client: RoomClient,
     api_assertions: ApiAssertions,
     room_request: RoomRequest,
+    api_resource_lifecycle: ApiResourceLifecycle,
 ) -> None:
+    api_resource_lifecycle.track_room(room_name=room_request.room_name)
     response = room_client.create_room(room_request)
 
     api_assertions.has_status(
@@ -176,6 +179,7 @@ def test_booked_room_is_excluded_from_matching_availability_search(
 @pytest.mark.xfail(
     reason="Known RBP defect: an unknown room returns 500 instead of 404",
     strict=True,
+    raises=KnownSandboxDefectError,
 )
 @allure.story("Room discovery")
 @allure.title("Unknown room identifier returns not found")
@@ -186,6 +190,8 @@ def test_unknown_room_identifier_returns_not_found(
     missing_resource_id: int,
 ) -> None:
     response = room_client.get_room(missing_resource_id)
+    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+        raise KnownSandboxDefectError("Unknown room returned 500 instead of 404")
 
     api_assertions.has_status(
         response,

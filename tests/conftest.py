@@ -1,5 +1,6 @@
 """Cross-suite reporting hooks."""
 
+import logging
 import platform
 from pathlib import Path
 
@@ -15,7 +16,13 @@ def pytest_sessionfinish(session: pytest.Session) -> None:
     if not results_directory:
         return
 
-    settings = Settings.from_env()
+    try:
+        settings = Settings.from_env()
+    except ValueError:
+        logging.getLogger(__name__).warning(
+            "Allure environment metadata omitted: invalid RBP configuration"
+        )
+        return
     environment = {
         "Base URL": settings.base_url,
         "Operating system": platform.platform(),

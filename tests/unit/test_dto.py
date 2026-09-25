@@ -7,11 +7,13 @@ import pytest
 
 from restful_booker.api.dto import (
     ApiBookingDates,
+    AuthRequest,
     BookingCollection,
     BookingRequest,
     RoomResponse,
     TokenResponse,
 )
+from restful_booker.models import Credentials
 
 pytestmark = [
     pytest.mark.unit,
@@ -108,3 +110,16 @@ def test_booking_collection_finds_exact_unique_guest() -> None:
 def test_token_response_rejects_non_string_token() -> None:
     with pytest.raises(TypeError, match="'token' must be a string"):
         TokenResponse.from_payload({"token": 123})
+
+
+def test_authentication_models_hide_secrets_without_changing_payloads() -> None:
+    auth = AuthRequest(username="operator", password="private-password")
+    credentials = Credentials(username="operator", password="private-password")
+    token = TokenResponse.from_payload({"token": "private-token"})
+
+    assert "private-password" not in repr(auth)
+    assert "private-password" not in repr(credentials)
+    assert "private-token" not in repr(token)
+    assert auth.to_payload() == {"username": "operator", "password": "private-password"}
+    assert credentials.password == "private-password"
+    assert token.token == "private-token"

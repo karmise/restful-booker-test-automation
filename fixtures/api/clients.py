@@ -28,17 +28,17 @@ def public_session() -> Iterator[Session]:
         yield session
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 @allure.title("Authenticate the API administrator")
 def authenticated_session(settings: Settings) -> Iterator[Session]:
-    """Authenticate once and reuse the administrator token across API tests."""
+    """Authenticate a fresh administrator session for each test."""
 
     with Session() as session:
         session.headers.update({"Accept": "application/json"})
         auth_client = AuthClient(
             session,
             base_url=settings.base_url,
-            timeout_s=settings.api_timeout_s,
+            timeout_s=settings.api_timeout,
         )
         response = auth_client.login(
             AuthRequest(
@@ -62,7 +62,7 @@ def auth_client(public_session: Session, settings: Settings) -> AuthClient:
     return AuthClient(
         public_session,
         base_url=settings.base_url,
-        timeout_s=settings.api_timeout_s,
+        timeout_s=settings.api_timeout,
     )
 
 
@@ -71,7 +71,7 @@ def room_client(public_session: Session, settings: Settings) -> RoomClient:
     return RoomClient(
         public_session,
         base_url=settings.base_url,
-        timeout_s=settings.api_timeout_s,
+        timeout_s=settings.api_timeout,
     )
 
 
@@ -83,7 +83,7 @@ def admin_room_client(
     return RoomClient(
         authenticated_session,
         base_url=settings.base_url,
-        timeout_s=settings.api_timeout_s,
+        timeout_s=settings.api_timeout,
     )
 
 
@@ -95,7 +95,7 @@ def booking_client(
     return BookingClient(
         public_session,
         base_url=settings.base_url,
-        timeout_s=settings.api_timeout_s,
+        timeout_s=settings.api_timeout,
     )
 
 
@@ -107,7 +107,7 @@ def admin_booking_client(
     return BookingClient(
         authenticated_session,
         base_url=settings.base_url,
-        timeout_s=settings.api_timeout_s,
+        timeout_s=settings.api_timeout,
     )
 
 
@@ -119,7 +119,7 @@ def message_client(
     return MessageClient(
         public_session,
         base_url=settings.base_url,
-        timeout_s=settings.api_timeout_s,
+        timeout_s=settings.api_timeout,
     )
 
 
@@ -131,7 +131,7 @@ def admin_message_client(
     return MessageClient(
         authenticated_session,
         base_url=settings.base_url,
-        timeout_s=settings.api_timeout_s,
+        timeout_s=settings.api_timeout,
     )
 
 
@@ -143,7 +143,7 @@ def branding_client(
     return BrandingClient(
         public_session,
         base_url=settings.base_url,
-        timeout_s=settings.api_timeout_s,
+        timeout_s=settings.api_timeout,
     )
 
 
@@ -155,5 +155,5 @@ def report_client(
     return ReportClient(
         public_session,
         base_url=settings.base_url,
-        timeout_s=settings.api_timeout_s,
+        timeout_s=settings.api_timeout,
     )

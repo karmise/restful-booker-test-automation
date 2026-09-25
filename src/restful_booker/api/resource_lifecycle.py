@@ -124,9 +124,10 @@ class ApiResourceLifecycle:
             self._cleanup_room(resource)
 
     def _cleanup_room(self, room: _TrackedRoom) -> None:
-        room_id = room.room_id or self._find_room_id(room.room_name)
+        room_id = self._find_room_id(room.room_name)
         if room_id is None:
             return
+        _require_same_id(room.room_id, room_id, resource=self._describe(room))
 
         response = self._admin_room_client.delete_room(room_id)
         if response.status_code == 202:
@@ -136,9 +137,10 @@ class ApiResourceLifecycle:
         _raise_delete_error(response, resource=f"room {room_id}")
 
     def _cleanup_booking(self, booking: _TrackedBooking) -> None:
-        booking_id = booking.booking_id or self._find_booking_id(booking)
+        booking_id = self._find_booking_id(booking)
         if booking_id is None:
             return
+        _require_same_id(booking.booking_id, booking_id, resource=self._describe(booking))
 
         response = self._admin_booking_client.delete_booking(booking_id)
         if response.status_code == 202:
@@ -148,9 +150,10 @@ class ApiResourceLifecycle:
         _raise_delete_error(response, resource=f"booking {booking_id}")
 
     def _cleanup_message(self, message: _TrackedMessage) -> None:
-        message_id = message.message_id or self._find_message_id(message.subject)
+        message_id = self._find_message_id(message.subject)
         if message_id is None:
             return
+        _require_same_id(message.message_id, message_id, resource=self._describe(message))
 
         response = self._admin_message_client.delete_message(message_id)
         if response.status_code == 202:
@@ -284,6 +287,15 @@ def _find_unique_id(
     if type(resource_id) is not int:
         raise ResourceCleanupError(f"{identity} has an invalid '{id_field}' value")
     return resource_id
+
+
+def _require_same_id(tracked_id: int | None, discovered_id: int, *, resource: str) -> None:
+    """Never delete a replacement resource after the shared environment resets."""
+
+    if tracked_id is not None and tracked_id != discovered_id:
+        raise ResourceCleanupError(
+            f"Refusing to delete {resource}: tracked id {tracked_id}, discovered id {discovered_id}"
+        )
 
 
 def _raise_delete_error(response: Response, *, resource: str) -> None:

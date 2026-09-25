@@ -2,7 +2,6 @@
 
 from collections.abc import Generator
 
-import allure
 import pytest
 from _pytest.nodes import Item
 from _pytest.reports import TestReport
@@ -36,6 +35,7 @@ from fixtures.ui.data import (
     test_data_factory,
 )
 from fixtures.ui.pages import admin_page, home_page, reservation_page
+from fixtures.ui.reporting import attach_failure_screenshot
 from fixtures.ui.resources import contact_message, isolated_room
 
 _PHASE_REPORTS = pytest.StashKey[dict[str, TestReport]]()
@@ -61,13 +61,9 @@ def attach_screenshot_on_failure(
     """Attach the final browser state to a failed Allure result."""
 
     yield
-    call_report = request.node.stash.get(_PHASE_REPORTS, {}).get("call")
-    if call_report is not None and call_report.failed and not page.is_closed():
-        allure.attach(
-            page.screenshot(full_page=True),
-            name="Browser state at failure",
-            attachment_type=allure.attachment_type.PNG,
-        )
+    reports = request.node.stash.get(_PHASE_REPORTS, {})
+    if any(report.failed for report in reports.values()):
+        attach_failure_screenshot(page)
 
 
 __all__ = [

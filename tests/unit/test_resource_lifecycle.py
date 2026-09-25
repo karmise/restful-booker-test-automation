@@ -45,22 +45,33 @@ def test_cleanup_rediscovers_room_when_setup_failed_before_id_was_known() -> Non
 
 def test_cleanup_removes_resources_in_reverse_creation_order() -> None:
     deletion_order: list[str] = []
+    room_client = Mock(spec=RoomClient)
+    room_client.get_rooms.return_value = _json_response(
+        200, {"rooms": [{"roomid": 10, "roomName": "api-room"}]}
+    )
     admin_room_client = Mock(spec=RoomClient)
     admin_room_client.delete_room.side_effect = lambda room_id: _record_deletion(
         deletion_order,
         f"room:{room_id}",
     )
     admin_booking_client = Mock(spec=BookingClient)
+    admin_booking_client.get_bookings_for_room.return_value = _json_response(
+        200, {"bookings": [{"bookingid": 20, "firstname": "Api", "lastname": "Guest"}]}
+    )
     admin_booking_client.delete_booking.side_effect = lambda booking_id: _record_deletion(
         deletion_order,
         f"booking:{booking_id}",
     )
     admin_message_client = Mock(spec=MessageClient)
+    admin_message_client.get_messages.return_value = _json_response(
+        200, {"messages": [{"id": 30, "subject": "API message"}]}
+    )
     admin_message_client.delete_message.side_effect = lambda message_id: _record_deletion(
         deletion_order,
         f"message:{message_id}",
     )
     lifecycle = _lifecycle(
+        room_client=room_client,
         admin_room_client=admin_room_client,
         admin_booking_client=admin_booking_client,
         admin_message_client=admin_message_client,
@@ -81,7 +92,10 @@ def test_cleanup_removes_resources_in_reverse_creation_order() -> None:
 
 def test_cleanup_accepts_failed_delete_when_resource_is_already_absent() -> None:
     room_client = Mock(spec=RoomClient)
-    room_client.get_rooms.return_value = _json_response(200, {"rooms": []})
+    room_client.get_rooms.side_effect = [
+        _json_response(200, {"rooms": [{"roomid": 42, "roomName": "api-reset-room"}]}),
+        _json_response(200, {"rooms": []}),
+    ]
     admin_room_client = Mock(spec=RoomClient)
     admin_room_client.delete_room.return_value = _json_response(500, {})
     lifecycle = _lifecycle(
@@ -121,6 +135,64 @@ def test_cleanup_reports_failure_after_attempting_remaining_resources() -> None:
         lifecycle.cleanup()
 
     admin_room_client.delete_room.assert_called_once_with(10)
+
+
+def test_cleanup_does_not_delete_reused_identifier_after_sandbox_reset() -> None:
+    room_client = Mock(spec=RoomClient)
+    room_client.get_rooms.return_value = _json_response(
+        200, {"rooms": [{"roomid": 42, "roomName": "someone-elses-room"}]}
+    )
+    admin_room_client = Mock(spec=RoomClient)
+    lifecycle = _lifecycle(room_client=room_client, admin_room_client=admin_room_client)
+    lifecycle.track_room(room_name="api-owned-room", room_id=42)
+
+    lifecycle.cleanup()
+
+    admin_room_client.delete_room.assert_not_called()
+
+
+def test_cleanup_refuses_ambiguous_resource_identity() -> None:
+    room_client = Mock(spec=RoomClient)
+    room_client.get_rooms.return_value = _json_response(
+        200,
+        {"rooms": [{"roomid": 42, "roomName": "same"}, {"roomid": 43, "roomName": "same"}]},
+    )
+    admin_room_client = Mock(spec=RoomClient)
+    lifecycle = _lifecycle(room_client=room_client, admin_room_client=admin_room_client)
+    lifecycle.track_room(room_name="same", room_id=42)
+
+    with pytest.raises(ResourceCleanupError, match="found 2"):
+        lifecycle.cleanup()
+
+    admin_room_client.delete_room.assert_not_called()
+
+
+def test_cleanup_refuses_changed_resource_identifier() -> None:
+    room_client = Mock(spec=RoomClient)
+    room_client.get_rooms.return_value = _json_response(
+        200, {"rooms": [{"roomid": 99, "roomName": "api-owned-room"}]}
+    )
+    admin_room_client = Mock(spec=RoomClient)
+    lifecycle = _lifecycle(room_client=room_client, admin_room_client=admin_room_client)
+    lifecycle.track_room(room_name="api-owned-room", room_id=42)
+
+    with pytest.raises(ResourceCleanupError, match="tracked id 42, discovered id 99"):
+        lifecycle.cleanup()
+
+    admin_room_client.delete_room.assert_not_called()
+
+
+def test_rejected_creation_does_not_delete_any_existing_message() -> None:
+    client = Mock(spec=MessageClient)
+    client.get_messages.return_value = _json_response(
+        200, {"messages": [{"id": 1, "subject": "another-test"}]}
+    )
+    lifecycle = _lifecycle(admin_message_client=client)
+    lifecycle.track_message(subject="rejected-message")
+
+    lifecycle.cleanup()
+
+    client.delete_message.assert_not_called()
 
 
 def _lifecycle(

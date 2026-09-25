@@ -81,9 +81,15 @@ def test_booking_rejects_invalid_guest_details(
     api_assertions: ApiAssertions,
     api_test_data_factory: ApiTestDataFactory,
     created_room: CreatedRoom,
+    api_resource_lifecycle: ApiResourceLifecycle,
 ) -> None:
     request = api_test_data_factory.booking_with_invalid_guest(room_id=created_room.room.room_id)
 
+    api_resource_lifecycle.track_booking(
+        room_id=request.room_id,
+        first_name=request.first_name,
+        last_name=request.last_name,
+    )
     response = booking_client.create_booking(request)
 
     api_assertions.has_status(
@@ -105,9 +111,15 @@ def test_booking_rejects_checkout_before_checkin(
     api_assertions: ApiAssertions,
     api_test_data_factory: ApiTestDataFactory,
     created_room: CreatedRoom,
+    api_resource_lifecycle: ApiResourceLifecycle,
 ) -> None:
     request = api_test_data_factory.booking_with_reversed_dates(room_id=created_room.room.room_id)
 
+    api_resource_lifecycle.track_booking(
+        room_id=request.room_id,
+        first_name=request.first_name,
+        last_name=request.last_name,
+    )
     response = booking_client.create_booking(request)
 
     api_assertions.has_status(
@@ -191,9 +203,15 @@ def test_overlapping_booking_for_same_room_is_rejected(
     api_assertions: ApiAssertions,
     api_test_data_factory: ApiTestDataFactory,
     created_booking: CreatedBooking,
+    api_resource_lifecycle: ApiResourceLifecycle,
 ) -> None:
     request = api_test_data_factory.overlapping_booking(created_booking.request)
 
+    api_resource_lifecycle.track_booking(
+        room_id=request.room_id,
+        first_name=request.first_name,
+        last_name=request.last_name,
+    )
     response = booking_client.create_booking(request)
 
     api_assertions.has_status(

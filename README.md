@@ -7,9 +7,9 @@
 A layered Python test automation framework for the
 [Restful Booker Platform](https://automationintesting.online).
 
-The project contains 60 automated tests: 15 browser scenarios, 26 API
-scenarios covering six external service contracts, and 19 fast unit tests for
-the framework itself.
+The project contains 15 browser scenarios and 26 API scenarios covering six
+external service contracts, plus fast isolated unit tests for the framework.
+Use `poetry run pytest --collect-only -q` to see the current inventory.
 
 **[Open the latest interactive Allure report](https://karmise.github.io/restful-booker-test-automation/)**
 
@@ -84,8 +84,19 @@ poetry install
 poetry run playwright install chromium
 ```
 
-Copy `.env.example` to `.env` only when execution settings need to be
-overridden. The public sandbox credentials are intentionally non-secret.
+Configuration is read from exported environment variables; `.env` is not loaded
+implicitly. To override the defaults in a local shell:
+
+```bash
+cp .env.example .env
+# Edit .env with your local settings, then export them for this shell.
+set -a
+source .env
+set +a
+```
+
+The public sandbox credentials are intentionally non-secret. Keep private
+credentials in the ignored `.env` file or CI secrets.
 
 ## Running checks
 
@@ -106,6 +117,12 @@ poetry run pytest tests/api/test_booking_api.py
 ```
 
 Every pytest run replaces `allure-results/` with fresh Allure result files.
+Use separate directories when comparing runs or running suites concurrently:
+
+```bash
+poetry run pytest tests/api --alluredir=artifacts/api-allure
+poetry run pytest tests/ui --alluredir=artifacts/ui-allure --output=artifacts/ui-browser
+```
 
 ## Allure reports
 
@@ -203,7 +220,10 @@ home-page catalogue smoke test intentionally uses a stable public seed because
 the application does not render rooms created through the administration API in
 that catalogue; direct reservation scenarios remain isolated with API-created rooms.
 Two strict expected-failure scenarios document known sandbox defects where
-unknown room and message identifiers return `500` instead of `404`.
+unknown room and message identifiers return `500` instead of `404`. Only that
+observed status raises the dedicated expected exception. Transport failures,
+authentication failures and other statuses remain failures; a corrected `404`
+produces strict XPASS so the obsolete marker can be removed.
 
 ## Continuous integration
 
@@ -243,8 +263,24 @@ remains configured to deploy with GitHub Actions.
 | `RBP_ADMIN_PASSWORD` | `password` |
 | `RBP_ACTION_TIMEOUT_MS` | `10000` |
 | `RBP_NAVIGATION_TIMEOUT_MS` | `30000` |
-| `RBP_API_TIMEOUT_S` | `15` |
+| `RBP_API_TIMEOUT_S` (read timeout, seconds) | `15` |
+| `RBP_API_CONNECT_TIMEOUT_S` (connect timeout, seconds) | `5` |
 
 The public environment is shared and periodically reset. Tests therefore use
 isolated browser contexts and unique generated data. API-backed cleanup deletes
 only resources registered by the current API or UI test.
+
+The API timeouts bound connection establishment and socket read inactivity,
+respectively; they are not total wall-clock deadlines. Invalid URLs and timeout
+values fail configuration validation before requests are sent.
+
+Public and administrator HTTP sessions are function-scoped. Each test gets fresh
+cookies, headers and authentication, and the session closes even if setup fails.
+Negative creation attempts are registered for cleanup too, so unexpected server
+acceptance does not leave test data behind. Cleanup rechecks unique resource
+identity before deleting; missing resources are left alone and ambiguous or
+changed identities are reported instead of deleted.
+
+Browser failure screenshots cover setup and test-call failures once the page
+fixture is available. A closed/crashed browser produces a diagnostic warning
+instead of an additional teardown error. Playwright traces remain enabled.

@@ -12,6 +12,7 @@ from restful_booker.api.clients import MessageClient
 from restful_booker.api.dto import MessageCollection, MessageRequest
 from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
 from restful_booker.api.testdata import ApiTestDataFactory
+from tests.api.known_defects import KnownSandboxDefectError
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -72,7 +73,9 @@ def test_message_rejects_invalid_email(
     message_client: MessageClient,
     api_assertions: ApiAssertions,
     invalid_message_request: MessageRequest,
+    api_resource_lifecycle: ApiResourceLifecycle,
 ) -> None:
+    api_resource_lifecycle.track_message(subject=invalid_message_request.subject)
     response = message_client.create_message(invalid_message_request)
 
     api_assertions.has_status(
@@ -141,6 +144,7 @@ def test_administrator_can_mark_contact_message_as_read(
 @pytest.mark.xfail(
     reason="Known RBP defect: an unknown message returns 500 instead of 404",
     strict=True,
+    raises=KnownSandboxDefectError,
 )
 @allure.story("Message discovery")
 @allure.title("Unknown message identifier returns not found")
@@ -151,6 +155,8 @@ def test_unknown_message_identifier_returns_not_found(
     missing_resource_id: int,
 ) -> None:
     response = admin_message_client.get_message(missing_resource_id)
+    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+        raise KnownSandboxDefectError("Unknown message returned 500 instead of 404")
 
     api_assertions.has_status(
         response,

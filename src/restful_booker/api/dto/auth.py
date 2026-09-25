@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from restful_booker.api.dto._parsing import as_object, required_str
 from restful_booker.api.types import JsonValue
@@ -13,7 +13,7 @@ class AuthRequest:
     """Credentials submitted to the authentication API."""
 
     username: str
-    password: str
+    password: str = field(repr=False)
 
     def to_payload(self) -> dict[str, JsonValue]:
         """Serialize credentials using the external API field names."""
@@ -28,7 +28,7 @@ class AuthRequest:
 class TokenResponse:
     """Token returned by a successful external API login."""
 
-    token: str
+    token: str = field(repr=False)
 
     @classmethod
     def from_payload(cls, payload: object) -> TokenResponse:

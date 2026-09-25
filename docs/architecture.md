@@ -103,7 +103,9 @@ or hide raw responses.
 
 Each external service has a focused client built on a shared
 `requests.Session` transport. The transport owns URL construction, connection
-reuse, and request timeouts. Authentication is represented by a session cookie,
+reuse within a test, and separate connect/read timeouts. Public and authenticated
+sessions are function-scoped; administrator login is repeated for each test to
+avoid cookie, header, and token leakage. Authentication is represented by a session cookie,
 matching the contract used by the UI.
 
 The same transport emits structured request and response diagnostics through
@@ -130,7 +132,11 @@ depends on a created room fixture. Both register their unique identities with a
 shared lifecycle before mutation, so cleanup can rediscover a
 resource even if setup fails before its identifier is parsed. The lifecycle
 deletes resources in reverse creation order and reports aggregated cleanup
-failures instead of abandoning the remaining resources.
+failures instead of abandoning the remaining resources. Before deletion, it
+rediscovers the unique identity and checks it against the tracked identifier,
+protecting other users' resources when the shared sandbox resets. Negative API
+creation attempts and uniquely identifiable invalid UI submissions are tracked
+as well: a validation regression must not leak newly created resources.
 
 UI resource fixtures use the same API lifecycle only for setup and teardown.
 Browser-test bodies remain UI-only while rooms and successful contact messages

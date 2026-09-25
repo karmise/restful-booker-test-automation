@@ -8,6 +8,7 @@ from typing import cast
 
 from requests import Response
 
+from restful_booker.api.exceptions import KnownSandboxDefectError
 from restful_booker.api.schema_registry import SchemaRegistry
 from restful_booker.api.types import JsonValue
 from restful_booker.reporting import report_step
@@ -26,8 +27,15 @@ class ApiAssertions:
         expected: HTTPStatus,
         *,
         because: str,
+        known_defect_status: HTTPStatus | None = None,
     ) -> None:
         """Verify an HTTP status with method, URL, and body on failure."""
+
+        if response.status_code != expected and response.status_code == known_defect_status:
+            raise KnownSandboxDefectError(
+                f"{because}\nExpected: {expected.value} {expected.phrase}\n"
+                f"Known defect: received {response.status_code} for {response.url}"
+            )
 
         assert response.status_code == expected, (
             f"{because}\n"

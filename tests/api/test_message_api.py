@@ -10,9 +10,9 @@ from restful_booker.api.assertions import ApiAssertions, MessageAssertions
 from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import MessageClient
 from restful_booker.api.dto import MessageCollection, MessageRequest
+from restful_booker.api.exceptions import KnownSandboxDefectError
 from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
 from restful_booker.api.testdata import ApiTestDataFactory
-from tests.api.known_defects import KnownSandboxDefectError
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -155,11 +155,10 @@ def test_unknown_message_identifier_returns_not_found(
     missing_resource_id: int,
 ) -> None:
     response = admin_message_client.get_message(missing_resource_id)
-    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
-        raise KnownSandboxDefectError("Unknown message returned 500 instead of 404")
 
     api_assertions.has_status(
         response,
         HTTPStatus.NOT_FOUND,
+        known_defect_status=HTTPStatus.INTERNAL_SERVER_ERROR,
         because="An unknown message identifier should not be reported as a server failure",
     )

@@ -24,36 +24,29 @@ pytestmark = [
     allure.feature("DTO contracts"),
 ]
 
-_BOOKING_ID = 11
-_ROOM_ID = 7
-_GUEST_FIRST_NAME = "Ada"
-_GUEST_LAST_NAME = "Lovelace"
-_CHECK_IN = date(2026, 8, 10)
-_CHECK_OUT = date(2026, 8, 12)
-
 
 def test_booking_request_serializes_external_field_names() -> None:
     request = BookingRequest(
-        room_id=_ROOM_ID,
-        first_name=_GUEST_FIRST_NAME,
-        last_name=_GUEST_LAST_NAME,
+        room_id=7,
+        first_name="Ada",
+        last_name="Lovelace",
         deposit_paid=True,
         dates=ApiBookingDates(
-            check_in=_CHECK_IN,
-            check_out=_CHECK_OUT,
+            check_in=date(2026, 8, 10),
+            check_out=date(2026, 8, 12),
         ),
         email="ada@example.com",
         phone="01234567890",
     )
 
     assert request.to_payload() == {
-        "roomid": _ROOM_ID,
-        "firstname": _GUEST_FIRST_NAME,
-        "lastname": _GUEST_LAST_NAME,
+        "roomid": 7,
+        "firstname": "Ada",
+        "lastname": "Lovelace",
         "depositpaid": True,
         "bookingdates": {
-            "checkin": _CHECK_IN.isoformat(),
-            "checkout": _CHECK_OUT.isoformat(),
+            "checkin": "2026-08-10",
+            "checkout": "2026-08-12",
         },
         "email": "ada@example.com",
         "phone": "01234567890",
@@ -63,7 +56,7 @@ def test_booking_request_serializes_external_field_names() -> None:
 def test_room_response_parses_api_payload_into_immutable_types() -> None:
     room = RoomResponse.from_payload(
         {
-            "roomid": _ROOM_ID,
+            "roomid": 7,
             "roomName": "portfolio-room",
             "type": "Suite",
             "accessible": True,
@@ -74,7 +67,7 @@ def test_room_response_parses_api_payload_into_immutable_types() -> None:
         }
     )
 
-    assert room.room_id == _ROOM_ID
+    assert room.room_id == 7
     assert room.features == ("WiFi", "TV")
     assert room.room_price == 225
 
@@ -84,14 +77,14 @@ def test_booking_collection_finds_exact_unique_guest() -> None:
         {
             "bookings": [
                 {
-                    "bookingid": _BOOKING_ID,
-                    "roomid": _ROOM_ID,
-                    "firstname": _GUEST_FIRST_NAME,
-                    "lastname": _GUEST_LAST_NAME,
+                    "bookingid": 11,
+                    "roomid": 7,
+                    "firstname": "Ada",
+                    "lastname": "Lovelace",
                     "depositpaid": False,
                     "bookingdates": {
-                        "checkin": _CHECK_IN.isoformat(),
-                        "checkout": _CHECK_OUT.isoformat(),
+                        "checkin": "2026-08-10",
+                        "checkout": "2026-08-12",
                     },
                 }
             ]
@@ -99,12 +92,12 @@ def test_booking_collection_finds_exact_unique_guest() -> None:
     )
 
     booking = collection.find_by_guest(
-        first_name=_GUEST_FIRST_NAME,
-        last_name=_GUEST_LAST_NAME,
+        first_name="Ada",
+        last_name="Lovelace",
     )
 
-    assert booking.booking_id == _BOOKING_ID
-    assert booking.dates.check_in == _CHECK_IN
+    assert booking.booking_id == 11
+    assert booking.dates.check_in == date(2026, 8, 10)
 
 
 def test_token_response_rejects_non_string_token() -> None:

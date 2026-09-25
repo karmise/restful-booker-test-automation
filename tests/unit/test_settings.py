@@ -14,19 +14,17 @@ pytestmark = [
     allure.feature("Configuration"),
 ]
 
-_SETTING_NAMES = (
-    "RBP_BASE_URL",
-    "RBP_ADMIN_USERNAME",
-    "RBP_ADMIN_PASSWORD",
-    "RBP_ACTION_TIMEOUT_MS",
-    "RBP_NAVIGATION_TIMEOUT_MS",
-    "RBP_API_TIMEOUT_S",
-    "RBP_API_CONNECT_TIMEOUT_S",
-)
-
 
 def test_settings_use_safe_sandbox_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
-    for name in _SETTING_NAMES:
+    for name in (
+        "RBP_BASE_URL",
+        "RBP_ADMIN_USERNAME",
+        "RBP_ADMIN_PASSWORD",
+        "RBP_ACTION_TIMEOUT_MS",
+        "RBP_NAVIGATION_TIMEOUT_MS",
+        "RBP_API_TIMEOUT_S",
+        "RBP_API_CONNECT_TIMEOUT_S",
+    ):
         monkeypatch.delenv(name, raising=False)
 
     settings = Settings.from_env()

@@ -22,7 +22,7 @@ would itself need unit coverage.
 A value is extracted only when its name explains domain meaning or when the
 same contract value is reused:
 
-- environment keys and shared DTO examples may be private module constants;
+- keep small deterministic DTO examples and expected values inside each test;
 - protocol and business constants owned by production code stay in the
   production module;
 - one-off expected values remain inside the test that documents them;
@@ -31,6 +31,20 @@ same contract value is reused:
 
 There is intentionally no global `test_constants.py`. A global constants file
 would couple unrelated suites and make expected behavior harder to read.
+
+## Scenario structure
+
+Each test follows one path with one expected outcome. Split successful and
+failing outcomes into separate tests instead of selecting assertions with
+`if/elif/else`. Use parametrization for different inputs that share the same
+assertion shape. Reusable assertion logic belongs in the assertion layer;
+fixture and transport lifecycle decisions belong in their respective layers.
+
+Known sandbox behavior is declared through `has_status(...,
+known_defect_status=HTTPStatus.INTERNAL_SERVER_ERROR)` together with a strict
+`xfail` limited to `KnownSandboxDefectError`. The test still explicitly expects
+404; other failures remain unexpected. Unit tests exercise this assertion
+policy directly, without importing or executing API test functions.
 
 ## Test-data generation
 

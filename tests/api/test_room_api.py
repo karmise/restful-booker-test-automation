@@ -10,8 +10,8 @@ from restful_booker.api.assertions import ApiAssertions, RoomAssertions
 from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import RoomClient
 from restful_booker.api.dto import RoomCollection, RoomRequest, RoomResponse
+from restful_booker.api.exceptions import KnownSandboxDefectError
 from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
-from tests.api.known_defects import KnownSandboxDefectError
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -190,11 +190,10 @@ def test_unknown_room_identifier_returns_not_found(
     missing_resource_id: int,
 ) -> None:
     response = room_client.get_room(missing_resource_id)
-    if response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
-        raise KnownSandboxDefectError("Unknown room returned 500 instead of 404")
 
     api_assertions.has_status(
         response,
         HTTPStatus.NOT_FOUND,
+        known_defect_status=HTTPStatus.INTERNAL_SERVER_ERROR,
         because="An unknown room identifier should not be reported as a server failure",
     )

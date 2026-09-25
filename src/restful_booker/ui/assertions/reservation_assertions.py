@@ -4,6 +4,7 @@ import re
 
 from playwright.sync_api import Page, expect
 
+from restful_booker.contracts.ui import reservation as reservation_contract
 from restful_booker.core import Settings
 from restful_booker.models import Room, StayPeriod
 from restful_booker.reporting import report_step
@@ -63,7 +64,7 @@ class ReservationAssertions:
     def price_summary_matches(self, room: Room, stay: StayPeriod) -> None:
         """Verify the nightly calculation and fixed service fees."""
 
-        expected_total = room.nightly_rate * stay.nights + 40
+        expected_total = room.nightly_rate * stay.nights + reservation_contract.SERVICE_FEE_GBP
         expect(
             self._reservation_page.booking_panel.price_line(
                 nightly_rate=room.nightly_rate,
@@ -73,7 +74,8 @@ class ReservationAssertions:
         ).to_be_visible()
         expect(
             self._reservation_page.booking_panel.total(expected_total),
-            "Reservation total should include the room price and £40 fixed fees",
+            f"Reservation total should include the room price and "
+            f"£{reservation_contract.SERVICE_FEE_GBP} fixed fees",
         ).to_be_visible()
 
     @report_step("Verify required guest-name validation messages")
@@ -84,11 +86,11 @@ class ReservationAssertions:
         expect(
             feedback,
             "Guest validation should require a first name",
-        ).to_contain_text("Firstname should not be blank")
+        ).to_contain_text(reservation_contract.FIRST_NAME_REQUIRED)
         expect(
             feedback,
             "Guest validation should require a last name",
-        ).to_contain_text("Lastname should not be blank")
+        ).to_contain_text(reservation_contract.LAST_NAME_REQUIRED)
 
     @report_step("Verify that guest entry is cancelled")
     def guest_entry_is_cancelled(self) -> None:
@@ -111,8 +113,8 @@ class ReservationAssertions:
         expect(
             feedback,
             "Guest validation should reject a malformed email address",
-        ).to_contain_text("must be a well-formed email address")
+        ).to_contain_text(reservation_contract.INVALID_EMAIL)
         expect(
             feedback,
             "Guest validation should reject a phone number shorter than 11 characters",
-        ).to_contain_text("size must be between 11 and 21")
+        ).to_contain_text(reservation_contract.INVALID_PHONE)

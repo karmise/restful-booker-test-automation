@@ -4,6 +4,7 @@ import re
 
 from playwright.sync_api import Page, expect
 
+from restful_booker.contracts.ui import contact as contact_contract
 from restful_booker.core import Settings
 from restful_booker.models import ContactMessage, Room
 from restful_booker.reporting import report_step
@@ -12,14 +13,6 @@ from restful_booker.ui.pages import HomePage
 
 class HomeAssertions:
     """Business-readable checks for rooms and the contact form."""
-
-    required_contact_errors = (
-        "Name may not be blank",
-        "Email may not be blank",
-        "Phone may not be blank",
-        "Subject may not be blank",
-        "Message may not be blank",
-    )
 
     def __init__(
         self,
@@ -45,7 +38,7 @@ class HomeAssertions:
         """Verify the complete required-field validation contract."""
 
         feedback = self._home_page.contact_form.validation_feedback
-        for error in self.required_contact_errors:
+        for error in contact_contract.REQUIRED_FIELD_ERRORS:
             expect(
                 feedback,
                 f"Contact validation should include: {error}",
@@ -76,11 +69,11 @@ class HomeAssertions:
         expect(
             feedback,
             "Contact validation should reject a malformed email address",
-        ).to_contain_text("must be a well-formed email address")
+        ).to_contain_text(contact_contract.INVALID_EMAIL)
         expect(
             feedback,
             "Contact validation should reject a phone number shorter than 11 characters",
-        ).to_contain_text("Phone must be between 11 and 21 characters.")
+        ).to_contain_text(contact_contract.INVALID_PHONE)
 
     @report_step("Verify that the contact message is accepted")
     def contact_submission_is_confirmed(
@@ -91,7 +84,7 @@ class HomeAssertions:
 
         expect(
             self._home_page.contact_form.confirmation(
-                f"Thanks for getting in touch {contact_message.name}!"
+                contact_contract.SUBMISSION_CONFIRMATION.format(name=contact_message.name)
             ),
             "A valid contact submission should acknowledge the sender by name",
         ).to_be_visible()

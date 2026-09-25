@@ -11,6 +11,7 @@ from requests import Response
 from restful_booker.api.exceptions import KnownSandboxDefectError
 from restful_booker.api.schema_registry import SchemaRegistry
 from restful_booker.api.types import JsonValue
+from restful_booker.contracts.api import mutation as mutation_contract
 from restful_booker.reporting import report_step
 
 
@@ -77,8 +78,9 @@ class ApiAssertions:
         assert isinstance(payload, dict), (
             f"Mutation response must be a JSON object, got {type(payload).__name__}"
         )
-        assert payload.get("success") is True, (
-            f"Expected mutation response {{'success': true}}, got {payload}"
+        assert payload.get("success") is mutation_contract.SUCCESS_RESPONSE["success"], (
+            f"Expected mutation success fields {dict(mutation_contract.SUCCESS_RESPONSE)}, "
+            f"got {payload}"
         )
 
 

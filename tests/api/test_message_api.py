@@ -13,6 +13,7 @@ from restful_booker.api.dto import MessageCollection, MessageRequest
 from restful_booker.api.exceptions import KnownSandboxDefectError
 from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
 from restful_booker.api.testdata import ApiTestDataFactory
+from restful_booker.contracts.api import message as message_contract
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -83,7 +84,7 @@ def test_message_rejects_invalid_email(
         HTTPStatus.BAD_REQUEST,
         because="A malformed contact email must not be persisted",
     )
-    api_assertions.contains_error(response, "well-formed email")
+    api_assertions.contains_error(response, message_contract.INVALID_EMAIL)
 
 
 @pytest.mark.api

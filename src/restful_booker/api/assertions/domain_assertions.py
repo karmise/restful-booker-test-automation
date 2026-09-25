@@ -13,6 +13,10 @@ from restful_booker.api.dto import (
     RoomResponse,
     TokenResponse,
 )
+from restful_booker.contracts.api import auth as auth_contract
+from restful_booker.contracts.api import branding as branding_contract
+from restful_booker.contracts.api import message as message_contract
+from restful_booker.contracts.api import report as report_contract
 from restful_booker.reporting import report_step
 
 
@@ -23,15 +27,16 @@ class AuthAssertions:
     def token_was_issued(self, token: TokenResponse) -> None:
         """Verify the public token contract."""
 
-        assert len(token.token) >= 16, (
-            f"Authentication token should contain at least 16 characters, got {len(token.token)}"
+        assert len(token.token) >= auth_contract.MIN_TOKEN_LENGTH, (
+            f"Authentication token should contain at least {auth_contract.MIN_TOKEN_LENGTH} "
+            f"characters, got {len(token.token)}"
         )
 
     @report_step("Verify that the authentication token is valid")
     def token_is_valid(self, payload: object) -> None:
         """Verify token validation response semantics."""
 
-        assert payload == {"valid": True}, (
+        assert payload == auth_contract.VALID_TOKEN_RESPONSE, (
             f"Valid authentication token should return {{'valid': true}}, got {payload}"
         )
 
@@ -132,13 +137,15 @@ class MessageAssertions:
         assert actual.subject == expected.subject, (
             f"Created message subject should be '{expected.subject}', got '{actual.subject}'"
         )
-        assert actual.is_read is False, "A newly created contact message should be unread"
+        assert actual.is_read is message_contract.INITIAL_READ_STATE, (
+            "A newly created contact message should be unread"
+        )
 
     @report_step("Verify that the contact message is marked as read")
     def message_is_read(self, actual: MessageSummary) -> None:
         """Verify the administrator read-state transition."""
 
-        assert actual.is_read is True, (
+        assert actual.is_read is message_contract.ACKNOWLEDGED_READ_STATE, (
             f"Message {actual.message_id} should be marked as read after the update"
         )
 
@@ -151,8 +158,8 @@ class BrandingAssertions:
         """Verify that branding contains the property and contact identity."""
 
         assert isinstance(payload, dict), "Branding response must be a JSON object"
-        assert payload.get("name") == "Shady Meadows B&B", (
-            "Branding should identify the property as 'Shady Meadows B&B'"
+        assert payload.get("name") == branding_contract.PROPERTY_NAME, (
+            f"Branding should identify the property as {branding_contract.PROPERTY_NAME!r}"
         )
         contact = payload.get("contact")
         assert isinstance(contact, dict), "Branding contact must be a JSON object"
@@ -166,7 +173,7 @@ class ReportAssertions:
     def has_no_entries_for_new_room(self, payload: object) -> None:
         """Verify that a newly created room starts without unavailable periods."""
 
-        assert payload == {"report": []}, (
+        assert payload == report_contract.empty_room_report(), (
             f"A newly created room should have an empty report, got {payload}"
         )
 
@@ -184,7 +191,7 @@ class ReportAssertions:
         expected_entry = {
             "start": expected.check_in.isoformat(),
             "end": expected.check_out.isoformat(),
-            "title": "Unavailable",
+            "title": report_contract.UNAVAILABLE_TITLE,
         }
         assert expected_entry in entries, (
             f"Room report should contain unavailable period {expected_entry}, got {entries}"

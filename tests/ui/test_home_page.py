@@ -3,6 +3,7 @@
 import allure
 import pytest
 
+from restful_booker.contracts.ui import navigation
 from restful_booker.models import ContactMessage, Room
 from restful_booker.ui.assertions import HomeAssertions, ReservationAssertions
 from restful_booker.ui.pages import HomePage
@@ -62,7 +63,7 @@ def test_primary_navigation_opens_contact_section(
 ) -> None:
     home_page.open()
 
-    home_page.header.open_section("Contact")
+    home_page.header.open_section(navigation.CONTACT)
 
     home_assertions.contact_section_is_open()
 

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from playwright.sync_api import Locator, Page
 
+from restful_booker.contracts.ui import authentication as auth_contract
+from restful_booker.contracts.ui import calendar as calendar_contract
 from restful_booker.core import Settings
 from restful_booker.models import Credentials
 from restful_booker.reporting import report_step
@@ -20,25 +22,25 @@ class AdminPage:
         self._settings = settings
         self._login_heading = page.get_by_role(
             "heading",
-            name="Login",
+            name=auth_contract.LOGIN,
             exact=True,
         ).describe("Administrator login heading")
         self._username = page.get_by_label(
-            "Username",
+            auth_contract.USERNAME,
             exact=True,
         ).describe("Administrator username input")
         self._password = page.get_by_label(
-            "Password",
+            auth_contract.PASSWORD,
             exact=True,
         ).describe("Administrator password input")
         self._login_button = page.get_by_role(
             "button",
-            name="Login",
+            name=auth_contract.LOGIN,
             exact=True,
         ).describe("Administrator login submit button")
         self._report_calendar = page.get_by_role(
             "table",
-            name="Month View",
+            name=calendar_contract.MONTH_VIEW,
             exact=True,
         ).describe("Administration booking report calendar")
         self.navigation = AdminNavigation(page)
@@ -55,7 +57,7 @@ class AdminPage:
 
         return (
             self._page.get_by_role("alert")
-            .filter(has_text="Invalid credentials")
+            .filter(has_text=auth_contract.INVALID_CREDENTIALS)
             .describe("Invalid administrator credentials feedback")
         )
 

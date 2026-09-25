@@ -3,6 +3,7 @@
 import allure
 import pytest
 
+from restful_booker.contracts.ui import navigation
 from restful_booker.models import Credentials
 from restful_booker.ui.assertions import AdminAssertions
 from restful_booker.ui.pages import AdminPage
@@ -78,7 +79,7 @@ def test_administrator_can_open_booking_report(
     admin_page.login(admin_credentials)
     admin_assertions.administrator_is_authenticated()
 
-    admin_page.navigation.open_section("Report")
+    admin_page.navigation.open_section(navigation.REPORT)
 
     admin_assertions.booking_report_is_open()
 

@@ -2,6 +2,7 @@
 
 from playwright.sync_api import Locator, Page
 
+from restful_booker.contracts.ui import contact as contact_contract
 from restful_booker.models import ContactMessage
 from restful_booker.reporting import report_step
 
@@ -13,7 +14,7 @@ class ContactForm:
         self._root = page.locator("#contact").describe("Public contact section")
         self._heading = self._root.get_by_role(
             "heading",
-            name="Send Us a Message",
+            name=contact_contract.HEADING,
             exact=True,
         ).describe("Contact form section heading")
         self._name = self._root.get_by_test_id("ContactName").describe("Contact name input")
@@ -27,7 +28,7 @@ class ContactForm:
         )
         self._submit_button = self._root.get_by_role(
             "button",
-            name="Submit",
+            name=contact_contract.SUBMIT,
             exact=True,
         ).describe("Contact form submit button")
 

@@ -12,6 +12,7 @@ from restful_booker.api.clients import RoomClient
 from restful_booker.api.dto import RoomCollection, RoomRequest, RoomResponse
 from restful_booker.api.exceptions import KnownSandboxDefectError
 from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
+from restful_booker.contracts.api import auth as auth_contract
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -100,7 +101,7 @@ def test_anonymous_user_cannot_create_room(
         HTTPStatus.UNAUTHORIZED,
         because="Room creation is restricted to authenticated administrators",
     )
-    api_assertions.contains_error(response, "Authentication required")
+    api_assertions.contains_error(response, auth_contract.AUTHENTICATION_REQUIRED)
 
 
 @pytest.mark.api

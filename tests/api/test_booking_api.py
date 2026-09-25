@@ -12,6 +12,8 @@ from restful_booker.api.clients import BookingClient
 from restful_booker.api.dto import BookingCollection, BookingResponse
 from restful_booker.api.resource_lifecycle import ApiResourceLifecycle
 from restful_booker.api.testdata import ApiTestDataFactory
+from restful_booker.contracts.api import auth as auth_contract
+from restful_booker.contracts.api import booking as booking_contract
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -97,8 +99,8 @@ def test_booking_rejects_invalid_guest_details(
         HTTPStatus.BAD_REQUEST,
         because="A booking with invalid guest fields must not be persisted",
     )
-    api_assertions.contains_error(response, "Firstname should not be blank")
-    api_assertions.contains_error(response, "well-formed email")
+    api_assertions.contains_error(response, booking_contract.FIRST_NAME_REQUIRED)
+    api_assertions.contains_error(response, booking_contract.INVALID_EMAIL)
 
 
 @pytest.mark.api
@@ -127,7 +129,7 @@ def test_booking_rejects_checkout_before_checkin(
         HTTPStatus.CONFLICT,
         because="Checkout before check-in violates the booking date contract",
     )
-    api_assertions.contains_error(response, "Failed to create booking")
+    api_assertions.contains_error(response, booking_contract.CREATION_FAILED)
 
 
 @pytest.mark.api
@@ -147,7 +149,7 @@ def test_anonymous_user_cannot_list_room_bookings(
         HTTPStatus.UNAUTHORIZED,
         because="Booking administration data must not be exposed anonymously",
     )
-    api_assertions.contains_error(response, "Authentication required")
+    api_assertions.contains_error(response, auth_contract.AUTHENTICATION_REQUIRED)
 
 
 @pytest.mark.api
@@ -219,4 +221,4 @@ def test_overlapping_booking_for_same_room_is_rejected(
         HTTPStatus.CONFLICT,
         because="The same room must not be double-booked for overlapping dates",
     )
-    api_assertions.contains_error(response, "Failed to create booking")
+    api_assertions.contains_error(response, booking_contract.CREATION_FAILED)

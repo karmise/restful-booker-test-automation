@@ -39,6 +39,8 @@ tests/unit
 ```
 
 - `core` owns environment configuration.
+- `contracts/api` and `contracts/ui` own expected messages, response content,
+  and visible text, grouped by service or screen.
 - `models` and `testdata` contain typed UI data.
 - `ui/assertions` contains domain checks and readable failure messages.
 - `ui/components` represents reusable or behavior-rich page elements.

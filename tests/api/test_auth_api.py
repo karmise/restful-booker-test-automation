@@ -9,6 +9,7 @@ from restful_booker.api.assertions import ApiAssertions, AuthAssertions
 from restful_booker.api.assertions.api_assertions import response_json
 from restful_booker.api.clients import AuthClient
 from restful_booker.api.dto import AuthRequest, TokenResponse
+from restful_booker.contracts.api import auth as auth_contract
 
 pytestmark = [
     allure.parent_suite("Restful Booker Platform"),
@@ -58,7 +59,7 @@ def test_invalid_credentials_are_rejected(
         HTTPStatus.UNAUTHORIZED,
         because="Invalid administrator credentials must not create a token",
     )
-    api_assertions.contains_error(response, "Invalid credentials")
+    api_assertions.contains_error(response, auth_contract.INVALID_CREDENTIALS)
 
 
 @pytest.mark.api
@@ -107,4 +108,4 @@ def test_unknown_authentication_token_is_rejected(
         HTTPStatus.FORBIDDEN,
         because="An unknown token must not authorize administrator operations",
     )
-    api_assertions.contains_error(response, "Invalid token")
+    api_assertions.contains_error(response, auth_contract.INVALID_TOKEN)

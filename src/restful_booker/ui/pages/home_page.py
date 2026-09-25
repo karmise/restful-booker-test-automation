@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from playwright.sync_api import Locator, Page
 
+from restful_booker.contracts.ui import home as home_contract
 from restful_booker.core import Settings
 from restful_booker.models import Room
 from restful_booker.reporting import report_step
@@ -20,7 +21,7 @@ class HomePage:
         self._settings = settings
         self._heading = page.get_by_role(
             "heading",
-            name="Welcome to Shady Meadows B&B",
+            name=home_contract.WELCOME_HEADING,
             exact=True,
         ).describe("Home page welcome heading")
         self._rooms = page.locator("#rooms").describe("Home page rooms section")
@@ -57,6 +58,6 @@ class HomePage:
 
         self.room_card(room).get_by_role(
             "link",
-            name="Book now",
+            name=home_contract.BOOK_NOW,
             exact=True,
         ).describe(f"Book now link for '{room.name}'").click()

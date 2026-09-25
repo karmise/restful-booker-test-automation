@@ -2,6 +2,7 @@
 
 from playwright.sync_api import Locator, Page
 
+from restful_booker.contracts.ui import reservation as reservation_contract
 from restful_booker.models import GuestDetails
 from restful_booker.reporting import report_step
 
@@ -13,28 +14,28 @@ class BookingPanel:
         self._root = page.locator(".booking-card").describe("Room booking panel")
         self._reserve_button = self._root.get_by_role(
             "button",
-            name="Reserve Now",
+            name=reservation_contract.RESERVE,
             exact=True,
         ).describe("Reserve Now button")
         self._cancel_button = self._root.get_by_role(
             "button",
-            name="Cancel",
+            name=reservation_contract.CANCEL,
             exact=True,
         ).describe("Cancel guest details button")
         self._first_name = self._root.get_by_label(
-            "Firstname",
+            reservation_contract.FIRST_NAME_LABEL,
             exact=True,
         ).describe("Guest first name input")
         self._last_name = self._root.get_by_label(
-            "Lastname",
+            reservation_contract.LAST_NAME_LABEL,
             exact=True,
         ).describe("Guest last name input")
         self._email = self._root.get_by_label(
-            "Email",
+            reservation_contract.EMAIL_LABEL,
             exact=True,
         ).describe("Guest email input")
         self._phone = self._root.get_by_label(
-            "Phone",
+            reservation_contract.PHONE_LABEL,
             exact=True,
         ).describe("Guest phone input")
 
@@ -54,7 +55,7 @@ class BookingPanel:
         """Locate the variable part of the price summary."""
 
         return self._root.get_by_text(
-            f"£{nightly_rate} x {nights} nights",
+            reservation_contract.PRICE_LINE.format(nightly_rate=nightly_rate, nights=nights),
             exact=True,
         ).describe(f"Price line for £{nightly_rate} across {nights} nights")
 
@@ -62,7 +63,7 @@ class BookingPanel:
         """Locate the calculated total in the price summary."""
 
         return self._root.get_by_text(
-            f"£{amount}",
+            reservation_contract.TOTAL_PRICE.format(amount=amount),
             exact=True,
         ).describe(f"Reservation total £{amount}")
 

@@ -70,6 +70,16 @@ Immutable request and response contracts use Python field names internally and
 serialize explicitly to the external JSON field names. Response DTOs parse
 schema-validated payloads used for resource discovery and business assertions.
 
+### Expected application contracts
+
+`contracts/api` and `contracts/ui` own expected response content and visible text,
+split by service or screen. Tests and assertion objects import those independent
+expectations; page components may also use UI labels to locate elements. Contract
+modules have no dependencies on clients, fixtures, tests, or observed responses.
+Dynamic confirmation text uses named templates, shared envelopes are read-only,
+and expected payloads containing lists are returned fresh. Input factories
+remain separate from these expectations.
+
 ### Test data
 
 Creates valid, unique model instances. Generation rules remain outside tests,

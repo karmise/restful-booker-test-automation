@@ -4,6 +4,8 @@ import re
 
 from playwright.sync_api import Page, expect
 
+from restful_booker.contracts.ui import authentication as auth_contract
+from restful_booker.contracts.ui import navigation
 from restful_booker.core import Settings
 from restful_booker.reporting import report_step
 from restful_booker.ui.pages import AdminPage
@@ -29,7 +31,7 @@ class AdminAssertions:
         expect(
             self._admin_page.invalid_credentials_feedback,
             "Invalid administrator credentials should show an authentication error",
-        ).to_have_text("Invalid credentials")
+        ).to_have_text(auth_contract.INVALID_CREDENTIALS)
 
     @report_step("Verify that the administrator is authenticated")
     def administrator_is_authenticated(self) -> None:
@@ -40,11 +42,11 @@ class AdminAssertions:
             "A successful administrator login should open the rooms page",
         ).to_have_url(re.compile(rf"^{re.escape(self._settings.base_url)}/admin/rooms/?$"))
         expect(
-            self._admin_page.navigation.link("Rooms"),
+            self._admin_page.navigation.link(navigation.ROOMS),
             "Authenticated navigation should contain the Rooms link",
         ).to_be_visible()
         expect(
-            self._admin_page.navigation.link("Report"),
+            self._admin_page.navigation.link(navigation.REPORT),
             "Authenticated navigation should contain the Report link",
         ).to_be_visible()
 

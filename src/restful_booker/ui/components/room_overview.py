@@ -2,6 +2,8 @@
 
 from playwright.sync_api import Locator, Page
 
+from restful_booker.contracts.ui import reservation as reservation_contract
+
 
 class RoomOverview:
     """User-visible room title, image, and feature list."""
@@ -14,7 +16,7 @@ class RoomOverview:
 
         return self._page.get_by_role(
             "heading",
-            name=f"{room_type} Room",
+            name=reservation_contract.ROOM_HEADING.format(room_type=room_type),
             exact=True,
         ).describe(f"Primary heading for '{room_type}' room type")
 
@@ -24,7 +26,7 @@ class RoomOverview:
 
         return self._page.get_by_role(
             "img",
-            name="Room Image",
+            name=reservation_contract.ROOM_IMAGE_ALT,
             exact=True,
         ).describe("Primary room image")
 

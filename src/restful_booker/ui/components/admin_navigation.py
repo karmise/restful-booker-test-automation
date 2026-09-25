@@ -2,6 +2,7 @@
 
 from playwright.sync_api import Locator, Page
 
+from restful_booker.contracts.ui import navigation
 from restful_booker.reporting import report_step
 
 
@@ -12,7 +13,7 @@ class AdminNavigation:
         self._root = page.get_by_role("navigation").describe("Administration navigation")
         self._logout_button = self._root.get_by_role(
             "button",
-            name="Logout",
+            name=navigation.LOGOUT,
             exact=True,
         ).describe("Administrator logout button")
 

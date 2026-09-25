@@ -1,0 +1,2 @@
+2026-09-25 15:18:58 | INFO     | restful_booker.api.http | HTTP request | method=GET | url=https://example.test/api/room/42 | params={} | headers={} | cookies={} | body={}
+2026-09-25 15:18:58 | INFO     | restful_booker.api.http | HTTP response | method=GET | url=None | status=200 | elapsed_ms=0.0 | headers={} | body={}

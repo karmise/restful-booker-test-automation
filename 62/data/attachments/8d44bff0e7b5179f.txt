@@ -1,0 +1,2 @@
+2026-09-26 06:55:06 | INFO     | restful_booker.api.http | HTTP request | method=GET | url=https://example.test/api/room/42 | params={} | headers={} | cookies={} | body={}
+2026-09-26 06:55:06 | ERROR    | restful_booker.api.http | HTTP failure | method=GET | url=https://example.test/api/room/42 | elapsed_ms=0.0 | error=Timeout: Read timed out

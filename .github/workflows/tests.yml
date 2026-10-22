@@ -52,6 +52,9 @@ on:
 env:
   PYTHON_VERSION: "3.12"
   POETRY_VERSION: "2.1.4"
+  # Read-only failure triage from https://github.com/karmise/qa-automation-agent.
+  QA_AGENT_REPOSITORY: https://github.com/karmise/qa-automation-agent.git
+  QA_AGENT_REF: main
   RBP_BASE_URL: >-
     ${{
       github.event_name == 'workflow_dispatch'
@@ -180,6 +183,26 @@ jobs:
 
           poetry run pytest "${pytest_args[@]}"
 
+      - name: Triage API failures
+        # Groups failures by cause in the job summary. Never changes the job result.
+        if: failure()
+        continue-on-error: true
+        shell: bash
+        run: |
+          git clone --quiet --depth 1 --branch "${QA_AGENT_REF}" \
+            "${QA_AGENT_REPOSITORY}" "${RUNNER_TEMP}/qa-agent"
+          python "${RUNNER_TEMP}/qa-agent/qa.py" triage allure-results --out triage > /dev/null || true
+          cat triage/report.md >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload API triage
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-triage
+          path: triage/
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Upload API Allure results
         if: always()
         uses: actions/upload-artifact@v7
@@ -297,6 +320,26 @@ jobs:
           fi
 
           poetry run pytest "${pytest_args[@]}"
+
+      - name: Triage UI failures
+        # Groups failures by cause in the job summary. Never changes the job result.
+        if: failure()
+        continue-on-error: true
+        shell: bash
+        run: |
+          git clone --quiet --depth 1 --branch "${QA_AGENT_REF}" \
+            "${QA_AGENT_REPOSITORY}" "${RUNNER_TEMP}/qa-agent"
+          python "${RUNNER_TEMP}/qa-agent/qa.py" triage allure-results --out triage > /dev/null || true
+          cat triage/report.md >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload UI triage
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-${{ matrix.browser }}-triage
+          path: triage/
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Upload UI Allure results
         if: always()

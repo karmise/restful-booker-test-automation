@@ -256,6 +256,21 @@ Previous launches open from the report's `Trends` widgets. The automatically
 managed `allure-history` branch stores the generated reports; GitHub Pages
 remains configured to deploy with GitHub Actions.
 
+When an API or UI job fails, a read-only triage step from
+[qa-automation-agent](https://github.com/karmise/qa-automation-agent) groups the
+failures by cause (suspected product defect, environment, test code, known
+defect) and writes the report to the job summary. Bug-report drafts are uploaded
+as the `*-triage` artifact. The step uses only the Python standard library and
+never changes the job result.
+
+## Working with coding agents
+
+[`AGENTS.md`](AGENTS.md) is the working agreement for Claude Code and Codex:
+layer rules, test-data isolation, and the rule that expectations are never
+changed to make a failing test pass. `CLAUDE.md` imports it. Project skills in
+`.claude/skills/` cover adding an API scenario through the framework's layers
+and triaging failed runs.
+
 ## Environment variables
 
 | Variable | Default |

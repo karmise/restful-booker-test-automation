@@ -27,6 +27,6 @@ test-results/
 .idea/
 .vscode/
 
-# Codex working directories
+# Local working directories
 outputs/
 work/

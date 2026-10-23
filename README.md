@@ -265,11 +265,10 @@ never changes the job result.
 
 ## Working with coding agents
 
-[`AGENTS.md`](AGENTS.md) is the working agreement for Claude Code and Codex:
-layer rules, test-data isolation, and the rule that expectations are never
-changed to make a failing test pass. `CLAUDE.md` imports it. Project skills in
-`.claude/skills/` cover adding an API scenario through the framework's layers
-and triaging failed runs.
+[`CLAUDE.md`](CLAUDE.md) is the working agreement for Claude Code: layer
+rules, test-data isolation, and the rule that expectations are never changed to
+make a failing test pass. Project skills in `.claude/skills/` cover adding an
+API scenario through the framework's layers and triaging failed runs.
 
 ## Environment variables
 

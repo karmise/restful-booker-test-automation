@@ -1,0 +1,1 @@
+2026-10-25 07:08:41 | WARNING  | fixtures.ui.reporting | Could not capture browser state at failure: Browser closed during capture
